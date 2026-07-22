@@ -12,7 +12,8 @@ export const users = pgTable("users", {
 export const stores = pgTable("stores", {
     id: uuid("id").defaultRandom().primaryKey(),
     name: text('name'),
-    created_at: timestamp("created_at", {withTimezone: true}).defaultNow().notNull()
+    created_at: timestamp("created_at", {withTimezone: true}).defaultNow().notNull(),
+    user_id: uuid("user_id").references(() => users.id, {onDelete: "cascade"})
 })
 
 export const materials = pgTable("materials", {
@@ -46,7 +47,15 @@ export const file = pgTable("file", {
     status: text('status', {enum: ['Pending', 'Confirmed']}).default('Pending')
 })
 
-export const storesRelations = relations(stores, ({ many }) => ({
+export const usersRelations = relations(users, ({ many }) => ({
+    stores: many(stores)
+}))
+
+export const storesRelations = relations(stores, ({ one, many }) => ({
+    user: one(users, {
+        fields: [stores.user_id],
+        references: [users.id]
+    }),
     materials: many(materials),
     sales: many(sales),
     files: many(file)

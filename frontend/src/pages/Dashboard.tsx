@@ -6,24 +6,40 @@ import { useAuth } from "@clerk/react";
 import { Navigate } from "react-router-dom";
 
 export function Dashboard() {
-  // interface storeType{
-  //   id: string
-  //   name: string
-  //   created_at: string
-  // }
+  interface storeType{
+    id: string
+    name: string
+    created_at: string
+  }
   const [fileName, setFileName] = useState("")
   const [file, setFile] = useState<File | undefined>(undefined)
   const [storeName, setStoreName] = useState("")
-  // const [store, setStore] = useState<storeType[]>([])
+  const [stores, setStores] = useState<storeType[]>([])
   const [addedStore, setAddedStore] = useState(false)
-  const {isLoaded, userId} = useAuth()
+  const {isLoaded, userId, getToken} = useAuth()
   useEffect(() => {
+    const fetchStoreData = async() => {
+      const token = await getToken()
+      const result = await axios.get("http://localhost:5000/store", {headers: {Authorization: `Bearer ${token}`}})
+      setStores(result.data)
+    }
     if(addedStore){
       setTimeout(() => {
         setAddedStore(false)
       }, 1000);
+      fetchStoreData()
     }
   }, [addedStore])
+
+  useEffect(() => {
+    const fetchStoreData = async() => {
+      const token = await getToken()
+      const result = await axios.get("http://localhost:5000/store", {headers: {Authorization: `Bearer ${token}`}})
+      console.log(result.data)
+      setStores(result.data)
+    }
+    fetchStoreData()
+  }, [])
 
   if(!isLoaded) return null
   if(!userId) return <Navigate to = "/intermission" replace />
@@ -134,15 +150,9 @@ export function Dashboard() {
           <div className="flex-1 rounded-xl border border-white/10 bg-white/3 p-4">
             <p className="text-xs font-medium text-white/50">Select Store</p>
             <div className="mt-3 space-y-2">
-              <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80">
-                Cupcake store outside the 7/11 in Granville 52nd st.
-              </div>
-              <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80">
-                Bagel cart by the Granville skytrain station
-              </div>
-              <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80">
-                Downtown flagship bakery
-              </div>
+              {stores.map((store) => (<div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80">
+                {store.name}
+              </div>))}
             </div>
           </div>
 
@@ -153,7 +163,7 @@ export function Dashboard() {
               className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30"
               onChange={(e) => setStoreName(e.target.value)}
             />
-            <button onClick={() => createStore(storeName)} className="mt-2 w-full rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950">
+            <button onClick={() => createStore(storeName)} className="mt-2 w-full rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950 hover:cursor-pointer hover:bg-emerald-500">
               Create Store
             </button>
           </div>
@@ -241,7 +251,8 @@ export function Dashboard() {
   );
 
   async function createStore(name: string){
-    const result = await axios.post("http://localhost:5000/create/store", {name: name})
+    const token = await getToken()
+    const result = await axios.post("http://localhost:5000/create/store", {name: name}, {headers: {Authorization: `Bearer ${token}`}})
     setAddedStore(result.data)
   }
 }
