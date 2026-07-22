@@ -1,9 +1,32 @@
 import { Upload, ArrowRight, Check, Sparkles, Zap, RefreshCw } from "lucide-react";
 import { Header } from "../assets/Header";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useAuth } from "@clerk/react";
+import { Navigate } from "react-router-dom";
 
 export function Dashboard() {
+  // interface storeType{
+  //   id: string
+  //   name: string
+  //   created_at: string
+  // }
   const [fileName, setFileName] = useState("")
+  const [file, setFile] = useState<File | undefined>(undefined)
+  const [storeName, setStoreName] = useState("")
+  // const [store, setStore] = useState<storeType[]>([])
+  const [addedStore, setAddedStore] = useState(false)
+  const {isLoaded, userId} = useAuth()
+  useEffect(() => {
+    if(addedStore){
+      setTimeout(() => {
+        setAddedStore(false)
+      }, 1000);
+    }
+  }, [addedStore])
+
+  if(!isLoaded) return null
+  if(!userId) return <Navigate to = "/intermission" replace />
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#060a09] text-white">
       <div className="pointer-events-none absolute left-1/2 top-40 h-[420px] w-[720px] -translate-x-1/2 rounded-full bg-emerald-500/10 blur-[120px]" />
@@ -56,11 +79,11 @@ export function Dashboard() {
                 type="file"
                 accept=".pdf,.xls,.xlsx"
                 className="hidden"
-                onChange={(e) => setFileName(e.target.files?.[0]?.name ?? "")}
+                onChange={(e) => {setFileName(e.target.files?.[0]?.name ?? ""); setFile(e.target.files?.[0])}}
               />
             </label>
 
-            {fileName && <button className="rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950">
+            {file && <button className="rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950">
               Send to automated encoder
             </button>}
           </div>
@@ -104,6 +127,35 @@ export function Dashboard() {
                 <div className="h-1.5 w-1/4 rounded-sm bg-white/15" />
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="mx-auto mt-10 flex max-w-xl items-start justify-center gap-6">
+          <div className="flex-1 rounded-xl border border-white/10 bg-white/3 p-4">
+            <p className="text-xs font-medium text-white/50">Select Store</p>
+            <div className="mt-3 space-y-2">
+              <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80">
+                Cupcake store outside the 7/11 in Granville 52nd st.
+              </div>
+              <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80">
+                Bagel cart by the Granville skytrain station
+              </div>
+              <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80">
+                Downtown flagship bakery
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-1">
+            <p className="mb-3 text-xs font-medium text-white/50">Create a New Store</p>
+            <input
+              placeholder="Store name"
+              className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30"
+              onChange={(e) => setStoreName(e.target.value)}
+            />
+            <button onClick={() => createStore(storeName)} className="mt-2 w-full rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950">
+              Create Store
+            </button>
           </div>
         </div>
 
@@ -187,4 +239,9 @@ export function Dashboard() {
       </main>
     </div>
   );
+
+  async function createStore(name: string){
+    const result = await axios.post("http://localhost:5000/create/store", {name: name})
+    setAddedStore(result.data)
+  }
 }
