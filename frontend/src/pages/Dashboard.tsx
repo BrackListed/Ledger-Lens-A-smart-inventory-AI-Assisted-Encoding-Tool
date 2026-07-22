@@ -17,6 +17,7 @@ export function Dashboard() {
   const [stores, setStores] = useState<storeType[]>([])
   const [addedStore, setAddedStore] = useState(false)
   const {isLoaded, userId, getToken} = useAuth()
+  const [selectedStore, setSelectedStore] = useState<storeType | undefined>(undefined)
   useEffect(() => {
     const fetchStoreData = async() => {
       const token = await getToken()
@@ -35,7 +36,6 @@ export function Dashboard() {
     const fetchStoreData = async() => {
       const token = await getToken()
       const result = await axios.get("http://localhost:5000/store", {headers: {Authorization: `Bearer ${token}`}})
-      console.log(result.data)
       setStores(result.data)
     }
     fetchStoreData()
@@ -150,9 +150,19 @@ export function Dashboard() {
           <div className="flex-1 rounded-xl border border-white/10 bg-white/3 p-4">
             <p className="text-xs font-medium text-white/50">Select Store</p>
             <div className="mt-3 space-y-2">
-              {stores.map((store) => (<div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80">
-                {store.name}
-              </div>))}
+              {stores.map((store) => (
+                <div
+                  key={store.id}
+                  onClick={() => setSelectedStore(selectedStore?.id === store.id ? undefined : store)}
+                  className={
+                    selectedStore?.id === store.id
+                      ? "cursor-pointer rounded-lg border border-emerald-400/50 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-300"
+                      : "cursor-pointer rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80"
+                  }
+                >
+                  {store.name}
+                </div>
+              ))}
             </div>
           </div>
 
