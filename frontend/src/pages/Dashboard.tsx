@@ -54,7 +54,9 @@ export function Dashboard() {
           Upload Your <span className="text-emerald-400">PDF</span> or{" "}
           <span className="text-emerald-400">Excel</span> Invoice Here
         </h1>
-
+        <p className="mt-2 text-center text-xs text-white/40">
+          Must have pdf/excel file &amp; selected store
+        </p>
 
 
         <div className="mt-14 flex items-center justify-center gap-4">
@@ -99,7 +101,7 @@ export function Dashboard() {
               />
             </label>
 
-            {file && <button className="rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950">
+            {(file && selectedStore) && <button onClick={() => encode(selectedStore.id, fileName, file)} className="rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950 hover:cursor-pointer hover:bg-emerald-500">
               Send to automated encoder
             </button>}
           </div>
@@ -264,5 +266,16 @@ export function Dashboard() {
     const token = await getToken()
     const result = await axios.post("http://localhost:5000/create/store", {name: name}, {headers: {Authorization: `Bearer ${token}`}})
     setAddedStore(result.data)
+  }
+
+  async function encode(storeId: string, name: string, file: File){
+    const formData = new FormData()
+    formData.append("file", file)
+    formData.append("name", name)
+    const token = await getToken()
+    const result = await axios.post(`http://localhost:5000/encode/${storeId}`, formData, {headers: {Authorization: `Bearer ${token}`}})
+    console.log(result.data.sheetText)
+    console.log(result.data.data)
+    // if(result.data) return <Navigate to = "/encoder"/>
   }
 }

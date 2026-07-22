@@ -27,7 +27,8 @@ export const materials = pgTable("materials", {
     total_price: numeric("total_price"),
     profit_margin: numeric("profit_margin"),
     status: text("status").default("Verified"),
-    purchased_at: timestamp("purchased_at", {withTimezone: true}).defaultNow().notNull()
+    purchased_at: timestamp("purchased_at", {withTimezone: true}).defaultNow().notNull(),
+    file_id: integer("file_id").references(() => file.id, {onDelete: "cascade"}),
 })
 
 export const sales = pgTable("sales", {
@@ -44,11 +45,13 @@ export const file = pgTable("file", {
     store_id: uuid("store_id").references(() => stores.id, {onDelete: "cascade"}),
     filename: text('filename'),
     upload_date: timestamp("upload_date", {withTimezone: true}).defaultNow().notNull(),
-    status: text('status', {enum: ['Pending', 'Confirmed']}).default('Pending')
+    status: text('status', {enum: ['Pending', 'Confirmed']}).default('Pending'),
+    user_id: uuid("user_id").references(() => users.id, {onDelete: "cascade"})
 })
 
 export const usersRelations = relations(users, ({ many }) => ({
-    stores: many(stores)
+    stores: many(stores),
+    files: many(file)
 }))
 
 export const storesRelations = relations(stores, ({ one, many }) => ({
@@ -66,6 +69,10 @@ export const materialsRelations = relations(materials, ({ one, many }) => ({
         fields: [materials.store_id],
         references: [stores.id]
     }),
+    file: one(file, {
+        fields: [materials.file_id],
+        references: [file.id]
+    }),
     sales: many(sales)
 }))
 
@@ -80,9 +87,14 @@ export const salesRelations = relations(sales, ({ one }) => ({
     })
 }))
 
-export const fileRelations = relations(file, ({ one }) => ({
+export const fileRelations = relations(file, ({ one, many }) => ({
     store: one(stores, {
         fields: [file.store_id],
         references: [stores.id]
-    })
+    }),
+    user: one(users, {
+        fields: [file.user_id],
+        references: [users.id]
+    }),
+    materials: many(materials)
 }))
