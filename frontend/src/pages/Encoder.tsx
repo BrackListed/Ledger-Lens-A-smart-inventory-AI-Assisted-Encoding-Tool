@@ -14,20 +14,47 @@ export function Encoder(){
         name: string
         user_id: string
     }
+
+    interface materialType{
+        id: number
+        file_id: number
+        store_id: string
+        description: string
+        preset_price: number
+        profit_margin: number
+        purchased_at: string
+        quantity: number
+        sku: string
+        status: string
+        total_price: number
+        unit_price: number
+    }
     const {getToken} = useAuth()
     const [storeQuery, setStoreQuery] = useState("")
     const [selectedStore, setSelectedStore] = useState<storeType | undefined>(undefined)
     const [isStoreFocused, setIsStoreFocused] = useState(false)
     const [stores, setStores] = useState<storeType[]>([])
     const filteredStores = stores.filter((store) => store.name.toLowerCase().includes(storeQuery.toLowerCase()))
+    const [fileName, setFileName] = useState("")
+    const [materials, setMaterials] = useState<materialType[]>([])
     useEffect(() => {
-        const fetchMaterialsData = async() => {
+        const fetchStoresData = async() => {
             const token = await getToken()
             const result = await axios.get("http://localhost:5000/store", {headers: {Authorization: `Bearer ${token}`}})
             setStores(result.data)
         }
-        fetchMaterialsData()
+        fetchStoresData()
     }, [])
+    useEffect(() => {
+        if(!selectedStore) return 
+        const fetchMaterialsData = async() => {
+            const token = await getToken()
+            const result = await axios.get(`http://localhost:5000/materials/${selectedStore?.id}`, {headers: {Authorization: `Bearer ${token}`}})
+            setFileName(result.data.file[0].filename)
+            setMaterials(result.data.materials)
+        }
+        fetchMaterialsData()
+    }, [selectedStore])
     return(
         <div className="relative min-h-screen overflow-hidden bg-[#060a09] text-white">
             <Header/>
@@ -82,7 +109,7 @@ export function Encoder(){
                     <div>
                         <div className="flex items-center gap-2 text-sm">
                             <span className="text-white/60">Processing:</span>
-                            <span className="font-medium text-emerald-400">invoice_9931.pdf</span>
+                            <span className="font-medium text-emerald-400">{fileName}</span>
                         </div>
                         <p className="mt-1 text-xs text-white/40">
                             AI Extraction Complete. Please review and confirm line items.
@@ -112,95 +139,27 @@ export function Encoder(){
                                 <th className="whitespace-nowrap px-4 py-2 font-medium">Quantity</th>
                                 <th className="whitespace-nowrap px-4 py-2 font-medium">Unit Price (Extracted)</th>
                                 <th className="whitespace-nowrap px-4 py-2 font-medium">Unit Cost (Preset)</th>
+                                <th className="whitespace-nowrap px-4 py-2 font-medium">Total</th>
                                 <th className="whitespace-nowrap px-4 py-2 font-medium">Profit Margin (%)</th>
                                 <th className="whitespace-nowrap px-4 py-2 font-medium">Status</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr className="border-t border-white/5">
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">CM-100</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">Cupcake Flour 25kg</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">50</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$30.00</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$22.00</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">26.6%</td>
+                            {materials.map((material) => (<tr className="border-t border-white/5">
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.sku}</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.description}</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.quantity}</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">${material.unit_price}</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">${material.preset_price ?? "No Preset Price"}</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">${material.total_price}</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.profit_margin}%</td>
                                 <td className="whitespace-nowrap px-4 py-2">
-                                    <span className="inline-flex items-center gap-1 text-emerald-400">
-                                        <CheckCircle2 className="h-3.5 w-3.5" />
-                                        Verified
+                                    <span className={`inline-flex items-center gap-1 ${material.status === "Verified" ? "text-emerald-400" : "text-orange-400"}`}>
+                                        {material.status === "Verified" ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertTriangle className="h-3.5 w-3.5" />}
+                                        <span>{material.status === "Verified" ? "Verified" : "Flagged"}</span>
                                     </span>
                                 </td>
-                            </tr>
-                            <tr className="border-t border-white/5">
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">CM-100</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">Cupcake Flour 25kg</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">50</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$30.00</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$22.00</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">26.6%</td>
-                                <td className="whitespace-nowrap px-4 py-2">
-                                    <span className="inline-flex items-center gap-1 text-emerald-400">
-                                        <CheckCircle2 className="h-3.5 w-3.5" />
-                                        Verified
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr className="border-t border-white/5">
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">CM-100</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">Cupcake Flour 25kg</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">50</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$30.00</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$22.00</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">26.6%</td>
-                                <td className="whitespace-nowrap px-4 py-2">
-                                    <span className="inline-flex items-center gap-1 text-emerald-400">
-                                        <CheckCircle2 className="h-3.5 w-3.5" />
-                                        Verified
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr className="border-t border-white/5">
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">CM-100</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">Cupcake Flour 25kg</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">50</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$30.00</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$22.00</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">26.6%</td>
-                                <td className="whitespace-nowrap px-4 py-2">
-                                    <span className="inline-flex items-center gap-1 text-orange-400">
-                                        <AlertTriangle className="h-3.5 w-3.5" />
-                                        Flagged: Price Spike
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr className="border-t border-white/5">
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">CM-100</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">Cupcake Flour 25kg</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">40</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$30.00</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$22.00</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">26.6%</td>
-                                <td className="whitespace-nowrap px-4 py-2">
-                                    <span className="inline-flex items-center gap-1 text-orange-400">
-                                        <AlertTriangle className="h-3.5 w-3.5" />
-                                        Flagged: Price Spike
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr className="border-t border-white/5">
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">CM-100</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">Cupcake Flour 25kg</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">50</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$30.00</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$22.00</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">26.6%</td>
-                                <td className="whitespace-nowrap px-4 py-2">
-                                    <span className="inline-flex items-center gap-1 text-orange-400">
-                                        <AlertTriangle className="h-3.5 w-3.5" />
-                                        Flagged: Price Spike
-                                    </span>
-                                </td>
-                            </tr>
+                            </tr>))}
                         </tbody>
                     </table>
                 </div>
