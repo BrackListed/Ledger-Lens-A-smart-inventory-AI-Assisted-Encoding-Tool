@@ -1,4 +1,4 @@
-import { User } from "lucide-react";
+import { UserButton } from "@clerk/react";
 import { Link, useLocation } from "react-router-dom";
 
 export function Header(){
@@ -33,9 +33,21 @@ export function Header(){
                 <span className="text-white/50 transition hover:text-white">Settings</span>
             </nav>
 
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10">
-                <User className="h-4 w-4 text-white/70" />
-            </div>
+            <UserButton
+                appearance={{
+                    elements: {
+                        avatarBox: "h-9 w-9 ring-2 ring-emerald-400/40 ring-offset-2 ring-offset-[#060a09]",
+                        userButtonPopoverCard: "bg-[#0d1412] border border-white/10 shadow-xl",
+                        userButtonPopoverMain: "bg-[#0d1412]",
+                        userPreviewMainIdentifier: "text-white",
+                        userPreviewSecondaryIdentifier: "text-white/50",
+                        userButtonPopoverActionButton: "text-white/80 hover:bg-white/5",
+                        userButtonPopoverActionButtonIcon: "text-white/60",
+                        userButtonPopoverActionButtonText: "text-white/80",
+                        userButtonPopoverFooter: "hidden",
+                    },
+                }}
+            />
         </header>
     )
 }
