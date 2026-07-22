@@ -87,7 +87,7 @@ app.post("/encode/:storeId", upload.single("file"), async(req, res) => {
   if(pending.rows.length > 0) {
     return res.json({message: "You have items on pending. Verify them before adding a new one!", status: false})
   }
-  const result = await pool.query("INSERT INTO file(store_id, filename, user_id) VALUES($1, $2, $3)", [req.params.storeId, req.body.name, id])
+  const result = await pool.query("INSERT INTO file(store_id, filename, user_id) VALUES($1, $2, $3) RETURNING id", [req.params.storeId, req.body.name, id])
   const workbook = XLSX.readFile(req.file!.path)
   const sheet = workbook.Sheets[workbook.SheetNames[0]]
   const data = XLSX.utils.sheet_to_json(sheet, {header: 1}) as any[][]
@@ -132,8 +132,29 @@ app.post("/encode/:storeId", upload.single("file"), async(req, res) => {
       total_price: total
     }
   })
-  console.log("first row" + rawMaterials[0])
-  res.json({message: "File successfully sent to encoding", file: result.rows, status: true, data: data, materials: materials})
+  const fileId = result.rows[0]?.id
+  const promises = materials.map(async (material) => {
+    return pool.query(
+      "INSERT INTO materials(sku, description, quantity, unit_price, total_price, store_id, file_id) VALUES($1, $2, $3, $4, $5, $6, $7)",
+      [material.sku, material.description, material.quantity, material.unit_price, material.total_price, req.params.storeId, fileId]
+    )
+  })
+  await Promise.all(promises)
+  res.json({message: "File successfully sent to encoding", status: true, data: data, materials: materials})
+})
+
+app.get("/store", async(req, res) => {
+  const {userId} = getAuth(req)
+  const fetch = await pool.query("SELECT id FROM users WHERE clerk_user_id = $1", [userId])
+  const id = fetch.rows[0]?.id
+  const store = await pool.query("SELECT * FROM stores WHERE user_id = $1", [id])
+  res.json(store.rows)
+})
+
+app.get("/materials/:storeId", async(req, res) => {
+  const result = await pool.query("SELECT * FROM materials WHERE store_id = $1", [req.params.storeId])
+  const file = await pool.query("SELECT * FROM file WHERE store_id = $1 AND status = $2", [req.params.storeId, 'Pending'])
+  res.json({materials: result.rows, file: file.rows})
 })
 
 

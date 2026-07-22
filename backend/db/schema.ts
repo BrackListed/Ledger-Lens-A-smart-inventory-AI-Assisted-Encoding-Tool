@@ -26,7 +26,7 @@ export const materials = pgTable("materials", {
     preset_price: numeric("preset_price"),
     total_price: numeric("total_price"),
     profit_margin: numeric("profit_margin"),
-    status: text("status").default("Verified"),
+    status: text("status", {enum: ['Verified', 'Flagged']}).default("Verified"),
     purchased_at: timestamp("purchased_at", {withTimezone: true}).defaultNow().notNull(),
     file_id: integer("file_id").references(() => file.id, {onDelete: "cascade"}),
 })

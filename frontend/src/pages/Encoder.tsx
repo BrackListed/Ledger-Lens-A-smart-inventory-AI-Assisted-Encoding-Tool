@@ -3,7 +3,7 @@ import { Header } from "../assets/Header";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/react";
-
+import { useLocation } from "react-router-dom"
 
 
 
@@ -30,8 +30,9 @@ export function Encoder(){
         unit_price: number
     }
     const {getToken} = useAuth()
+    const { state } = useLocation()
     const [storeQuery, setStoreQuery] = useState("")
-    const [selectedStore, setSelectedStore] = useState<storeType | undefined>(undefined)
+    const [selectedStore, setSelectedStore] = useState<storeType | undefined>(state?.store ?? undefined)
     const [isStoreFocused, setIsStoreFocused] = useState(false)
     const [stores, setStores] = useState<storeType[]>([])
     const filteredStores = stores.filter((store) => store.name.toLowerCase().includes(storeQuery.toLowerCase()))
@@ -149,9 +150,9 @@ export function Encoder(){
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.sku}</td>
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.description}</td>
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.quantity}</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">${material.unit_price}</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">${material.preset_price ?? "No Preset Price"}</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">${material.total_price}</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.unit_price}</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.preset_price ?? "No Preset Price"}</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.total_price}</td>
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.profit_margin}%</td>
                                 <td className="whitespace-nowrap px-4 py-2">
                                     <span className={`inline-flex items-center gap-1 ${material.status === "Verified" ? "text-emerald-400" : "text-orange-400"}`}>

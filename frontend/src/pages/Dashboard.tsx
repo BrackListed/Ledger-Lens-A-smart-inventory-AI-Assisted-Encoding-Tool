@@ -102,7 +102,7 @@ export function Dashboard() {
               />
             </label>
 
-            {(file && selectedStore) && <button onClick={() => encode(selectedStore.id, fileName, file)} className="rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950 hover:cursor-pointer hover:bg-emerald-500">
+            {(file && selectedStore) && <button onClick={() => encode(selectedStore.id, fileName, file, selectedStore)} className="rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950 hover:cursor-pointer hover:bg-emerald-500">
               Send to automated encoder
             </button>}
           </div>
@@ -269,14 +269,14 @@ export function Dashboard() {
     setAddedStore(result.data)
   }
 
-  async function encode(storeId: string, name: string, file: File){
+  async function encode(storeId: string, name: string, file: File, store: storeType){
     const formData = new FormData()
     formData.append("file", file)
     formData.append("name", name)
     const token = await getToken()
     const result = await axios.post(`http://localhost:5000/encode/${storeId}`, formData, {headers: {Authorization: `Bearer ${token}`}})
     if(result.data.status) {
-      navigate("/encoder")
+      navigate("/encoder", {state: {store}})
     } else{
       alert(result.data.message)
     }
