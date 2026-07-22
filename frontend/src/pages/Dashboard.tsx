@@ -3,7 +3,7 @@ import { Header } from "../assets/Header";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
 export function Dashboard() {
   interface storeType{
@@ -18,6 +18,7 @@ export function Dashboard() {
   const [addedStore, setAddedStore] = useState(false)
   const {isLoaded, userId, getToken} = useAuth()
   const [selectedStore, setSelectedStore] = useState<storeType | undefined>(undefined)
+  const navigate = useNavigate()
   useEffect(() => {
     const fetchStoreData = async() => {
       const token = await getToken()
@@ -274,8 +275,10 @@ export function Dashboard() {
     formData.append("name", name)
     const token = await getToken()
     const result = await axios.post(`http://localhost:5000/encode/${storeId}`, formData, {headers: {Authorization: `Bearer ${token}`}})
-    console.log(result.data.sheetText)
-    console.log(result.data.data)
-    // if(result.data) return <Navigate to = "/encoder"/>
+    if(result.data.status) {
+      navigate("/encoder")
+    } else{
+      alert(result.data.message)
+    }
   }
 }

@@ -1,7 +1,33 @@
-import { Loader2, CheckCircle2, AlertTriangle, FileText, Sparkles } from "lucide-react";
+import { CheckCircle2, AlertTriangle, FileText, } from "lucide-react";
 import { Header } from "../assets/Header";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { useAuth } from "@clerk/react";
+
+
+
 
 export function Encoder(){
+    interface storeType{
+        created_at: string
+        id: string
+        name: string
+        user_id: string
+    }
+    const {getToken} = useAuth()
+    const [storeQuery, setStoreQuery] = useState("")
+    const [selectedStore, setSelectedStore] = useState<storeType | undefined>(undefined)
+    const [isStoreFocused, setIsStoreFocused] = useState(false)
+    const [stores, setStores] = useState<storeType[]>([])
+    const filteredStores = stores.filter((store) => store.name.toLowerCase().includes(storeQuery.toLowerCase()))
+    useEffect(() => {
+        const fetchMaterialsData = async() => {
+            const token = await getToken()
+            const result = await axios.get("http://localhost:5000/store", {headers: {Authorization: `Bearer ${token}`}})
+            setStores(result.data)
+        }
+        fetchMaterialsData()
+    }, [])
     return(
         <div className="relative min-h-screen overflow-hidden bg-[#060a09] text-white">
             <Header/>
@@ -9,12 +35,54 @@ export function Encoder(){
             <main className="relative z-10 mx-auto max-w-6xl px-8 py-10">
                 <h1 className="text-xl font-semibold">Automated Encoder &amp; Confirmation</h1>
 
+                <div className="flex items-start gap-4">
+                    <div className="relative mt-4 max-w-xs">
+                        <p className="mb-2 text-xs text-white/50">Selected Store</p>
+                        <input
+                            value={storeQuery}
+                            onChange={(e) => setStoreQuery(e.target.value)}
+                            onFocus={() => setIsStoreFocused(true)}
+                            onBlur={() => setIsStoreFocused(false)}
+                            placeholder="Search store..."
+                            className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-emerald-400/50 focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+                        />
+                        {storeQuery && isStoreFocused && (
+                            <div
+                                onMouseDown={(e) => e.preventDefault()}
+                                className="absolute z-10 mt-1 w-full rounded-md border border-white/10 bg-[#0d1412] py-1 shadow-xl"
+                            >
+                                {filteredStores.length > 0 ? (
+                                    filteredStores.map((store) => (
+                                        <div
+                                            key={store.id}
+                                            onClick={() => {setStoreQuery(store.name); setSelectedStore(store)}}
+                                            className="cursor-pointer px-3 py-2 text-sm text-white/80 hover:bg-emerald-400/10 hover:text-emerald-300"
+                                        >
+                                            {store.name}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="px-3 py-2 text-sm text-white/30">No matches</div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {selectedStore && (
+                        <div className="mt-4 flex flex-col">
+                            <p className="mb-2 text-xs text-white/50 invisible">Selected</p>
+                            <div className="whitespace-nowrap rounded-md border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-300">
+                                Selected Store: {selectedStore.name}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
                 <div className="mt-6 flex items-center justify-between rounded-xl border border-white/10 bg-white/3 px-5 py-4">
                     <div>
                         <div className="flex items-center gap-2 text-sm">
                             <span className="text-white/60">Processing:</span>
                             <span className="font-medium text-emerald-400">invoice_9931.pdf</span>
-                            <Loader2 className="h-3.5 w-3.5 animate-spin text-white/40" />
                         </div>
                         <p className="mt-1 text-xs text-white/40">
                             AI Extraction Complete. Please review and confirm line items.
@@ -179,7 +247,6 @@ export function Encoder(){
                 </div>
             </main>
 
-            <Sparkles className="pointer-events-none absolute bottom-6 right-6 h-6 w-6 text-white/20" />
         </div>
     )
 }
