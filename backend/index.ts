@@ -85,15 +85,12 @@ app.post("/encode/:storeId", upload.single("file"), async(req, res) => {
   const id = fetch.rows[0]?.id
   if(!id) return res.status(404).json({error: "User not found"})
   if(pending.rows.length > 0) {
-    res.json({message: "You have items on pending. Verify them before adding a new one!", status: false})
-    return res.status(409).json({ error: "You have items on pending!"})
+    return res.json({message: "You have items on pending. Verify them before adding a new one!", status: false})
   }
   const result = await pool.query("INSERT INTO file(store_id, filename, user_id) VALUES($1, $2, $3)", [req.params.storeId, req.body.name, id])
   const workbook = XLSX.readFile(req.file!.path)
   const sheet = workbook.Sheets[workbook.SheetNames[0]]
   const data = XLSX.utils.sheet_to_json(sheet, {header: 1}) as any[][]
-  const sheetText = data.map(row => row.join('\t')).join('\n')
-  console.log(sheetText)
   const completion = await groq.chat.completions.create({
     model: "openai/gpt-oss-20b",
     response_format: {type: "json_object"},
@@ -111,12 +108,32 @@ app.post("/encode/:storeId", upload.single("file"), async(req, res) => {
     },
     {
       role: "user",
-      content: sheetText
+      content: JSON.stringify(data[0])
     }
     ],
     temperature: 0
   })
-  res.json({message: "File successfully sent to encoding", file: result.rows, status: true, sheetText: sheetText, data: data})
+  const raw = completion.choices[0]?.message?.content || ''
+  const clean = raw.replace(/```json|```/g, '').trim()
+  const columns = JSON.parse(clean)
+  const cutoffRow = (row: any[]) =>
+    !row[columns.sku] && !row[columns.description]
+  const cutoff = data.findIndex(cutoffRow)
+  const rawMaterials = cutoff === -1 ? data.slice(1) : data.slice(1, cutoff)
+  const materials = rawMaterials.map((material) => {
+    const unitprice = Number(material[columns.unit_price])
+    const quantity = Number(material[columns.quantity])
+    const total = unitprice * quantity
+    return{
+      sku: material[columns.sku],
+      description: material[columns.description],
+      quantity: material[columns.quantity],
+      unit_price: material[columns.unit_price],
+      total_price: total
+    }
+  })
+  console.log("first row" + rawMaterials[0])
+  res.json({message: "File successfully sent to encoding", file: result.rows, status: true, data: data, materials: materials})
 })
 
 
