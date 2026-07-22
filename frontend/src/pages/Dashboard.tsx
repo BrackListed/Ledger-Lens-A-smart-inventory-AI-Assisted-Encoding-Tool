@@ -1,7 +1,9 @@
 import { Upload, ArrowRight, Check, Sparkles, Zap, RefreshCw } from "lucide-react";
 import { Header } from "../assets/Header";
+import { useState } from "react";
 
 export function Dashboard() {
+  const [fileName, setFileName] = useState("")
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#060a09] text-white">
       <div className="pointer-events-none absolute left-1/2 top-40 h-[420px] w-[720px] -translate-x-1/2 rounded-full bg-emerald-500/10 blur-[120px]" />
@@ -10,9 +12,11 @@ export function Dashboard() {
 
       <main className="relative z-10 mx-auto max-w-6xl px-8 py-16">
         <h1 className="text-center text-3xl font-semibold leading-tight sm:text-4xl">
-          Drag &amp; Drop Your <span className="text-emerald-400">PDF</span> or{" "}
+          Upload Your <span className="text-emerald-400">PDF</span> or{" "}
           <span className="text-emerald-400">Excel</span> Invoice Here
         </h1>
+
+
 
         <div className="mt-14 flex items-center justify-center gap-4">
           <div className="hidden shrink-0 -rotate-6 rounded-lg border border-white/10 bg-white/95 p-3 shadow-xl sm:block">
@@ -29,14 +33,36 @@ export function Dashboard() {
           </div>
 
           <ArrowRight className="h-5 w-5 text-white/30" />
-          <div className="relative flex h-64 w-64 shrink-0 flex-col items-center justify-center gap-3 rounded-2xl border border-emerald-400/30 bg-gradient-to-b from-emerald-500/10 to-transparent text-center shadow-[0_0_60px_-10px_rgba(16,185,129,0.35)]">
-            <div className="absolute inset-0 rounded-2xl border border-dashed border-white/15" />
-            <Upload className="h-8 w-8 text-emerald-400" />
-            <p className="px-6 text-sm font-medium text-white/90">
-              Drag &amp; Drop Your
-              <br />
-              PDF or Excel Invoice Here
-            </p>
+          <div className="flex shrink-0 flex-col items-center gap-4">
+            <label
+              htmlFor="invoice-upload"
+              className="relative flex h-64 w-64 shrink-0 cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-emerald-400/30 bg-linear-to-b from-emerald-500/10 to-transparent text-center shadow-[0_0_60px_-10px_rgba(16,185,129,0.35)]"
+            >
+              <div className="absolute inset-0 rounded-2xl border border-dashed border-white/15" />
+              <Upload className="h-8 w-8 text-emerald-400" />
+              <p className="px-6 text-sm font-medium text-white/90">
+                {fileName ? (
+                  fileName
+                ) : (
+                  <>
+                    Upload Your
+                    <br />
+                    PDF or Excel Invoice Here
+                  </>
+                )}
+              </p>
+              <input
+                id="invoice-upload"
+                type="file"
+                accept=".pdf,.xls,.xlsx"
+                className="hidden"
+                onChange={(e) => setFileName(e.target.files?.[0]?.name ?? "")}
+              />
+            </label>
+
+            {fileName && <button className="rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950">
+              Send to automated encoder
+            </button>}
           </div>
 
           <ArrowRight className="h-5 w-5 text-white/30" />
