@@ -33,7 +33,7 @@ export const materials = pgTable("materials", {
 export const sales = pgTable("sales", {
     id: serial('id').primaryKey(),
     store_id: uuid("store_id").references(() => stores.id, {onDelete: "cascade"}),
-    item_sku: text("item_sku").references(() => materials.sku, {onDelete: "cascade"}),
+    material_id: integer("material_id").references(() => materials.id, {onDelete: "cascade"}),
     quantity: integer("quantity"),
     sale_price: numeric("sale_price"),
     sale_date: timestamp("sale_date", {withTimezone: true}).defaultNow().notNull()
@@ -67,8 +67,8 @@ export const salesRelations = relations(sales, ({ one }) => ({
         references: [stores.id]
     }),
     material: one(materials, {
-        fields: [sales.item_sku],
-        references: [materials.sku]
+        fields: [sales.material_id],
+        references: [materials.id]
     })
 }))
 
