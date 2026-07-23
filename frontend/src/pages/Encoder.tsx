@@ -1,4 +1,4 @@
-import { CheckCircle2, AlertTriangle, FileText, } from "lucide-react";
+import { CheckCircle2, AlertTriangle, FileText, Trash2 } from "lucide-react";
 import { Header } from "../assets/Header";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -265,15 +265,21 @@ export function Encoder(){
                                 <th className="whitespace-nowrap px-4 py-2 font-medium">Quantity</th>
                                 <th className="whitespace-nowrap px-4 py-2 font-medium">Price</th>
                                 <th className="whitespace-nowrap px-4 py-2 font-medium">Total</th>
+                                <th className="whitespace-nowrap px-4 py-2 font-medium">Delete</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {sales.map((sale) => (<tr className="border-t border-white/5">
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.date}6</td>
+                            {sales.map((sale) => (<tr key={sale.id} className="border-t border-white/5">
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.date}</td>
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.sku}</td>
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.quantity}</td>
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.price}</td>
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.total}</td>
+                                <td className="whitespace-nowrap px-4 py-2">
+                                    <button onClick={() => setSales(prev => prev.filter(s => s.id !== sale.id))} className="text-white/40 hover:text-orange-400 hover:cursor-pointer">
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                </td>
                             </tr>))}
                         </tbody>
                     </table>
