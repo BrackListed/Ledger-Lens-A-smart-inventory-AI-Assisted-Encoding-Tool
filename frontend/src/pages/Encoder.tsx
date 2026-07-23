@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/react";
 import { useLocation } from "react-router-dom"
-
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 
 export function Encoder(){
@@ -49,6 +50,8 @@ export function Encoder(){
     const [materials, setMaterials] = useState<materialType[]>([])
     const [file, setFile] = useState<fileType | undefined>(undefined)
     const [saved, setSaved] = useState(false)
+    const [saleDate, setSaleDate] = useState<Date | null>(null)
+    
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -205,9 +208,12 @@ export function Encoder(){
                                     className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-white/30"
                                 />
                             </div>
-                            <input
-                                placeholder="Date"
-                                className="mt-2 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-white/30"
+                            <DatePicker
+                                selected={saleDate}
+                                onChange={(date: Date | null) => setSaleDate(date)}
+                                placeholderText="Date"
+                                wrapperClassName="mt-2 w-full block"
+                                className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-white/30"
                             />
                             <button className="mt-3 w-full rounded-md bg-white/10 py-2 text-xs font-medium text-white/90">
                                 Add Single Sale
@@ -225,6 +231,45 @@ export function Encoder(){
                         </div>
                     </div>
                 </div>
+
+                <h2 className="mt-10 text-sm font-semibold text-white/90">Sales History</h2>
+
+                <div className="mt-3 overflow-x-auto rounded-xl border border-white/10">
+                    <table className="w-full text-left text-sm">
+                        <thead>
+                            <tr className="bg-emerald-950 text-white/70">
+                                <th className="whitespace-nowrap px-4 py-2 font-medium">Date</th>
+                                <th className="whitespace-nowrap px-4 py-2 font-medium">SKU</th>
+                                <th className="whitespace-nowrap px-4 py-2 font-medium">Quantity</th>
+                                <th className="whitespace-nowrap px-4 py-2 font-medium">Price</th>
+                                <th className="whitespace-nowrap px-4 py-2 font-medium">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr className="border-t border-white/5">
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">07/01/2026</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">CM-100</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">5</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$30.00</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$150.00</td>
+                            </tr>
+                            <tr className="border-t border-white/5">
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">07/03/2026</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">CM-101</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">2</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$18.00</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$36.00</td>
+                            </tr>
+                            <tr className="border-t border-white/5">
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">07/08/2026</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">CM-102</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">10</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$9.50</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$95.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </main>
 
         </div>
@@ -234,4 +279,6 @@ export function Encoder(){
         const result = await axios.patch(`http://localhost:5000/confirm/${id}`)
         setSaved(result.data)
     }
+    
+
 }
