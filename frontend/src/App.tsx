@@ -3,6 +3,7 @@ import { Dashboard } from "./pages/Dashboard";
 import { Encoder } from "./pages/Encoder";
 import { ClerkProvider } from "@clerk/react";
 import { Intermission } from "./pages/Intermission";
+import { Stores } from "./pages/Stores";
 export default function App(){
   return(
     <BrowserRouter>
@@ -11,6 +12,7 @@ export default function App(){
         <Route path = "/" element = {<Dashboard/>}/>
         <Route path = "/encoder" element={<Encoder/>}/>
         <Route path = "/intermission" element={<Intermission/>}/>
+        <Route path = "/stores" element={<Stores/>}/>
       </Routes>
     </ClerkProvider>
     </BrowserRouter>

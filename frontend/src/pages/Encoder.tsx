@@ -29,6 +29,15 @@ export function Encoder(){
         total_price: number
         unit_price: number
     }
+
+    interface fileType{
+        id: number
+        filename: string
+        status: string
+        store_id: string
+        upload_date: string
+        user_id: string
+    }
     const {getToken} = useAuth()
     const { state } = useLocation()
     const [storeQuery, setStoreQuery] = useState("")
@@ -38,6 +47,8 @@ export function Encoder(){
     const filteredStores = stores.filter((store) => store.name.toLowerCase().includes(storeQuery.toLowerCase()))
     const [fileName, setFileName] = useState("")
     const [materials, setMaterials] = useState<materialType[]>([])
+    const [file, setFile] = useState<fileType | undefined>(undefined)
+    const [saved, setSaved] = useState(false)
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -52,10 +63,19 @@ export function Encoder(){
             const token = await getToken()
             const result = await axios.get(`http://localhost:5000/materials/${selectedStore?.id}`, {headers: {Authorization: `Bearer ${token}`}})
             setFileName(result.data.file[0].filename)
+            setFile(result.data.file[0])
             setMaterials(result.data.materials)
         }
         fetchMaterialsData()
     }, [selectedStore])
+
+    useEffect(() => {
+        if(saved){
+            setTimeout(() => {
+                setSaved(false)
+            }, 1000);
+        }
+    }, [saved])
     return(
         <div className="relative min-h-screen overflow-hidden bg-[#060a09] text-white">
             <Header/>
@@ -121,7 +141,7 @@ export function Encoder(){
                         <button className="rounded-md border border-white/15 px-4 py-2 text-sm text-white/80">
                             Discard File
                         </button>
-                        <button className="rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950">
+                        <button onClick={() => confirmFile(file?.id)} className="rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 hover:cursor-pointer">
                             Confirm &amp; Add to Material List
                         </button>
                     </div>
@@ -209,4 +229,9 @@ export function Encoder(){
 
         </div>
     )
+    
+    async function confirmFile(id: number | undefined){
+        const result = await axios.patch(`http://localhost:5000/confirm/${id}`)
+        setSaved(result.data)
+    }
 }

@@ -29,6 +29,15 @@ export function Header(){
                         Automated Encoder
                     </span>
                 </Link>
+                <Link to="/stores">
+                    <span className={
+                        location.pathname === "/stores"
+                            ? "relative text-white after:absolute after:-bottom-4 after:left-0 after:h-0.5 after:w-full after:bg-emerald-400"
+                            : "text-white/50 transition hover:text-white"
+                    }>
+                        Stores
+                    </span>
+                </Link>
                 <span className="text-white/50 transition hover:text-white">Anomaly Reports</span>
                 <span className="text-white/50 transition hover:text-white">Settings</span>
             </nav>
