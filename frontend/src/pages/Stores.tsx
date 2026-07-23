@@ -91,10 +91,11 @@ export function Stores(){
                 </div>
 
                 <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
-                    <div className="overflow-x-auto rounded-xl border border-white/10">
+                    <div className="overflow-hidden rounded-xl border border-white/10">
+                      <div className="max-h-96 overflow-y-auto overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                            <thead>
-                                <tr className="bg-emerald-900/40 text-white/70">
+                            <thead className="sticky top-0 z-10">
+                                <tr className="bg-emerald-950 text-white/70">
                                     <th className="whitespace-nowrap px-4 py-2 font-medium">Date</th>
                                     <th className="whitespace-nowrap px-4 py-2 font-medium">SKU</th>
                                     <th className="whitespace-nowrap px-4 py-2 font-medium">Item Description</th>
@@ -118,6 +119,7 @@ export function Stores(){
                                 </tr>))}
                             </tbody>
                         </table>
+                      </div>
                     </div>
 
                     <div className="rounded-xl border border-white/10 bg-white/3 p-4">
