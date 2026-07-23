@@ -32,11 +32,12 @@ export const materials = pgTable("materials", {
 })
 
 export const sales = pgTable("sales", {
-    id: serial('id').primaryKey(),
+    id: uuid('id').primaryKey(),
     store_id: uuid("store_id").references(() => stores.id, {onDelete: "cascade"}),
     material_id: integer("material_id").references(() => materials.id, {onDelete: "cascade"}),
     quantity: integer("quantity"),
     sale_price: numeric("sale_price"),
+    total: numeric('total'),
     sale_date: timestamp("sale_date", {withTimezone: true}).defaultNow().notNull()
 })
 

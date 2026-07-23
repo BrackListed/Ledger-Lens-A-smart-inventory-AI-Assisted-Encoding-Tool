@@ -10,6 +10,7 @@ import Groq from "groq-sdk";
 import multer from "multer"
 import path from "path"
 import * as XLSX from "xlsx"
+import { materials } from "./db/schema"
 
 
 const app = express()
@@ -116,9 +117,7 @@ app.post("/encode/:storeId", upload.single("file"), async(req, res) => {
   const raw = completion.choices[0]?.message?.content || ''
   const clean = raw.replace(/```json|```/g, '').trim()
   const columns = JSON.parse(clean)
-  const cutoffRow = (row: any[]) =>
-    !row[columns.sku] && !row[columns.description]
-  const cutoff = data.findIndex(cutoffRow)
+  const cutoff = data.findIndex(row => !row[columns.sku] && !row[columns.description])
   const rawMaterials = cutoff === -1 ? data.slice(1) : data.slice(1, cutoff)
   const materials = rawMaterials.map((material) => {
     const unitprice = Number(material[columns.unit_price])
@@ -140,7 +139,57 @@ app.post("/encode/:storeId", upload.single("file"), async(req, res) => {
     )
   })
   await Promise.all(promises)
-  res.json({message: "File successfully sent to encoding", status: true, data: data, materials: materials})
+  res.json({message: "File successfully sent to encoding", status: true, materials: materials, file: pending.rows})
+})
+
+app.post("/encode/sales/:storeId", upload.single("sales"), async(req, res) => {
+  const {userId} = getAuth(req)
+  const fetch = await pool.query("SELECT id FROM users WHERE clerk_user_id = $1", [userId])
+  const id = fetch.rows[0]?.id
+  if (!id) return res.status(404).json({ error: "User not found" })
+  const workbook = XLSX.readFile(req.file!.path)
+  const sheet = workbook.Sheets[workbook.SheetNames[0]]
+  const object = XLSX.utils.sheet_to_json(sheet, {header: 1}) as any[][]
+  const completion = await groq.chat.completions.create({
+    model: "openai/gpt-oss-20b",
+    response_format: {type: "json_object"},
+    messages: [{
+      role: "system",
+      content: `Map spreadsheet columns to fields. Return JSON only.
+      Fields (column number, or null): sku, quantity, sale_price, sale_date
+      - sku: item code / product code / SKU
+      - quantity: quantity sold
+      - sale_price: price per unit at time of sale
+      - sale_date: date of the sale
+      Shape: {"sku":n,"quantity":n,"sale_price":n,"sale_date":n}
+      Only assign a column number if that field clearly exists in the header. If a field has no matching column, set it to null. Do NOT shift or guess — a missing field is null, never a borrowed index.
+      The column numbers start from 0`
+    },
+    {
+      role: "user",
+      content: JSON.stringify(object[0])
+    }
+    ],
+    temperature: 0
+  })
+  const raw = completion.choices[0]?.message?.content || ''
+  const clean = raw.replace(/```json|```/g, '').trim()
+  const columns = JSON.parse(clean)
+  const cutoff = object.findIndex(sample => !sample[columns.sale_price] && !sample[columns.sale_date])
+  const rawSales = object.slice(1, cutoff)
+  const sales = rawSales.map((sales) => {
+    const price = sales[columns.sale_price]
+    const quantity = sales[columns.quantity]
+    const total = Number(price) * Number(quantity)
+    return {
+      sku: sales[columns.sku],
+      quantity: sales[columns.quantity],
+      sale_price: sales[columns.sale_price],
+      sale_date: sales[columns.sale_date],
+      total: total
+    }
+  })
+  res.json(sales)
 })
 
 app.get("/store", async(req, res) => {
@@ -152,9 +201,20 @@ app.get("/store", async(req, res) => {
 })
 
 app.get("/materials/:storeId", async(req, res) => {
-  const result = await pool.query("SELECT * FROM materials WHERE store_id = $1", [req.params.storeId])
+  const result = await pool.query("SELECT materials.* FROM materials JOIN file on materials.file_id = file.id WHERE materials.store_id = $1 AND file.status = 'Pending'", [req.params.storeId])
   const file = await pool.query("SELECT * FROM file WHERE store_id = $1 AND status = $2", [req.params.storeId, 'Pending'])
   res.json({materials: result.rows, file: file.rows})
+})
+
+app.get("/completed/:storeId", async(req, res) => {
+  const file = await pool.query("SELECT * FROM file WHERE store_id = $1 AND status = $2", [req.params.storeId, 'Confirmed'])
+  const materials = await pool.query("SELECT materials.* FROM materials JOIN file ON materials.file_id = file.id WHERE materials.store_id = $1 AND file.status = 'Confirmed'", [req.params.storeId])
+  res.json({materials: materials.rows, files: file.rows})
+})
+
+app.patch("/confirm/:fileId", async(req, res) => {
+  await pool.query("UPDATE file SET status = $1 WHERE id = $2", ['Confirmed', req.params.fileId])
+  res.json(true)
 })
 
 
