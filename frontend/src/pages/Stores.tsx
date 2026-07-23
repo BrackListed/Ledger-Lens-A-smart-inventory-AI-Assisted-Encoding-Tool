@@ -11,10 +11,36 @@ export function Stores(){
         name: string
         user_id: string
     }
+    interface materialType{
+        id: number
+        file_id: number
+        store_id: string
+        description: string
+        preset_price: number
+        profit_margin: number
+        purchased_at: string
+        quantity: number
+        sku: string
+        status: string
+        total_price: number
+        unit_price: number
+    }
+
+    interface fileType{
+        id: number
+        filename: string
+        status: string
+        store_id: string
+        upload_date: string
+        user_id: string
+    }
     const {getToken} = useAuth()
     const [stores, setStores] = useState<storeType[]>([])
     const [searchQuery, setSearchQuery] = useState("")
     const filteredStores = stores.filter((store) => store.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    const [materials, setMaterials] = useState<materialType[]>([])
+    const [files, setFiles] = useState<fileType[]>([])
+    const [selectedFile, setSelectedFile] = useState<fileType | undefined>(undefined)
     const [selectedStore, setSelectedStore] = useState<storeType | undefined>(undefined)
     useEffect(() => {
         const fetchStoresData = async() => {
@@ -25,7 +51,15 @@ export function Stores(){
         fetchStoresData()
     }, [])
     useEffect(() => {
-
+        if(!selectedStore) return 
+        const fetchMaterialData = async() => {
+            const token = await getToken()
+            const result = await axios.get(`http://localhost:5000/completed/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
+            setMaterials(result.data.materials)
+            setFiles(result.data.files)
+            console.log(result.data.files)
+        }
+        fetchMaterialData()
     }, [selectedStore])
     return(
         <div className="relative min-h-screen overflow-hidden bg-[#060a09] text-white">
@@ -44,7 +78,12 @@ export function Stores(){
                     {filteredStores.map((store) => (
                         <div
                             key={store.id}
-                            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80"
+                            className={
+                                selectedStore?.id === store.id
+                                    ? "cursor-pointer rounded-lg border border-emerald-400/50 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-300 transition"
+                                    : "cursor-pointer rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 transition hover:border-emerald-400/30 hover:text-white"
+                            }
+                            onClick={() => setSelectedStore(store)}
                         >
                             {store.name}
                         </div>
@@ -67,46 +106,16 @@ export function Stores(){
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr className="border-t border-white/5">
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">07/01/2026</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">CM-100</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">Cupcake Flour 25kg</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">50</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">$30.00</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">$22.00</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">$1,500.00</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">26.6%</td>
-                                </tr>
-                                <tr className="border-t border-white/5">
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">07/03/2026</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">CM-101</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">Vanilla Extract 1L</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">12</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">$18.00</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">$14.50</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">$216.00</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">19.4%</td>
-                                </tr>
-                                <tr className="border-t border-white/5">
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">07/08/2026</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">CM-102</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">Sprinkles Mix 5kg</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">20</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">$9.50</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">$7.00</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">$190.00</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">26.3%</td>
-                                </tr>
-                                <tr className="border-t border-white/5">
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">07/12/2026</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">CM-103</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">Cupcake Liners 500ct</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">30</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">$6.20</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">$4.80</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">$186.00</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">22.6%</td>
-                                </tr>
+                                {materials.map((material) => (<tr className="border-t border-white/5">
+                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">{new Date(material.purchased_at).toLocaleString()}</td>
+                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.sku}</td>
+                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.description}r</td>
+                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.quantity}</td>
+                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.unit_price}</td>
+                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.preset_price}</td>
+                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.total_price}</td>
+                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.profit_margin}%</td>
+                                </tr>))}
                             </tbody>
                         </table>
                     </div>
@@ -114,22 +123,10 @@ export function Stores(){
                     <div className="rounded-xl border border-white/10 bg-white/3 p-4">
                         <p className="text-sm font-semibold text-white/90">Files</p>
                         <div className="mt-3 space-y-2">
-                            <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80">
+                            {files?.map((file) => (<div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80">
                                 <FileText className="h-4 w-4 shrink-0 text-white/40" />
-                                invoice_9931.pdf
-                            </div>
-                            <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80">
-                                <FileText className="h-4 w-4 shrink-0 text-white/40" />
-                                invoice_8820.pdf
-                            </div>
-                            <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80">
-                                <FileText className="h-4 w-4 shrink-0 text-white/40" />
-                                sales_sheet_june.xlsx
-                            </div>
-                            <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80">
-                                <FileText className="h-4 w-4 shrink-0 text-white/40" />
-                                receipt_scan_0042.pdf
-                            </div>
+                                {file.filename}
+                            </div>))}
                         </div>
                     </div>
                 </div>
