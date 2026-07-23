@@ -42,6 +42,7 @@ export function Stores(){
     const [files, setFiles] = useState<fileType[]>([])
     const [selectedFile, setSelectedFile] = useState<fileType | undefined>(undefined)
     const [selectedStore, setSelectedStore] = useState<storeType | undefined>(undefined)
+    const filteredMaterials = selectedFile ? materials.filter((m) => m.file_id === selectedFile.id) : null
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -105,7 +106,7 @@ export function Stores(){
                                 </tr>
                             </thead>
                             <tbody>
-                                {materials.map((material) => (<tr className="border-t border-white/5">
+                                {(filteredMaterials ?? materials).map((material) => (<tr key={material.id} className="border-t border-white/5">
                                     <td className="whitespace-nowrap px-4 py-2 text-white/70">{new Date(material.purchased_at).toLocaleString()}</td>
                                     <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.sku}</td>
                                     <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.description}r</td>
