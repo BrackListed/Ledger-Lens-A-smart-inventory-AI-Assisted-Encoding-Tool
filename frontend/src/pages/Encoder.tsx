@@ -6,6 +6,7 @@ import { useAuth } from "@clerk/react";
 import { useLocation } from "react-router-dom"
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { v4 as uuidv4 } from 'uuid';
 
 
 export function Encoder(){
@@ -39,6 +40,15 @@ export function Encoder(){
         upload_date: string
         user_id: string
     }
+
+    interface salesType{
+        id: string
+        date: string
+        sku: string
+        quantity: number
+        price: number
+        total: number
+    }
     const {getToken} = useAuth()
     const { state } = useLocation()
     const [storeQuery, setStoreQuery] = useState("")
@@ -51,7 +61,10 @@ export function Encoder(){
     const [file, setFile] = useState<fileType | undefined>(undefined)
     const [saved, setSaved] = useState(false)
     const [saleDate, setSaleDate] = useState<Date | null>(null)
-    
+    const [singularSale, setSingularSale] = useState<salesType>({ id: "", sku: "", quantity: 0, price: 0, date: "", total: 0 })
+    const [sales, setSales] = useState<salesType[]>([])
+
+
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -196,26 +209,35 @@ export function Encoder(){
                         <div className="rounded-xl border border-white/10 bg-white/3 p-4">
                             <div className="grid grid-cols-3 gap-2">
                                 <input
+                                    onChange={(e) => setSingularSale(prev => ({...prev, sku: e.target.value}))}
                                     placeholder="Sold Item SKU"
                                     className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-white/30"
                                 />
                                 <input
+                                    onChange={(e) => setSingularSale(prev => ({...prev, quantity: Number(e.target.value), total: Number(e.target.value) * prev.price}))}
                                     placeholder="Quantity Sold"
                                     className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-white/30"
                                 />
                                 <input
+                                    onChange={(e) => setSingularSale(prev => ({...prev, price: Number(e.target.value), total: Number(e.target.value) * prev.quantity}))}
                                     placeholder="Sale Price"
                                     className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-white/30"
                                 />
                             </div>
                             <DatePicker
                                 selected={saleDate}
-                                onChange={(date: Date | null) => setSaleDate(date)}
+                                onChange={(date: Date | null) => {
+                                    setSaleDate(date);
+                                    setSingularSale(prev => ({
+                                        ...prev,
+                                        date: date ? new Date(date).toLocaleDateString() : ''
+                                    }));
+                                }}
                                 placeholderText="Date"
                                 wrapperClassName="mt-2 w-full block"
                                 className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-white/30"
                             />
-                            <button className="mt-3 w-full rounded-md bg-white/10 py-2 text-xs font-medium text-white/90">
+                            <button onClick={async() => setSales(prev => [...prev, {...singularSale, id: uuidv4()}])} className="mt-3 w-full rounded-md bg-white/10 py-2 text-xs font-medium text-white/90">
                                 Add Single Sale
                             </button>
                         </div>
@@ -232,7 +254,7 @@ export function Encoder(){
                     </div>
                 </div>
 
-                <h2 className="mt-10 text-sm font-semibold text-white/90">Sales History</h2>
+                <h2 className="mt-10 text-sm font-semibold text-white/90">Sales Table</h2>
 
                 <div className="mt-3 overflow-x-auto rounded-xl border border-white/10">
                     <table className="w-full text-left text-sm">
@@ -246,30 +268,20 @@ export function Encoder(){
                             </tr>
                         </thead>
                         <tbody>
-                            <tr className="border-t border-white/5">
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">07/01/2026</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">CM-100</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">5</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$30.00</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$150.00</td>
-                            </tr>
-                            <tr className="border-t border-white/5">
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">07/03/2026</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">CM-101</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">2</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$18.00</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$36.00</td>
-                            </tr>
-                            <tr className="border-t border-white/5">
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">07/08/2026</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">CM-102</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">10</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$9.50</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$95.00</td>
-                            </tr>
+                            {sales.map((sale) => (<tr className="border-t border-white/5">
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.date}6</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.sku}</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.quantity}</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.price}</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.total}</td>
+                            </tr>))}
                         </tbody>
                     </table>
                 </div>
+
+                <button className="mt-4 rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 hover:cursor-pointer">
+                    Forward to Stores
+                </button>
             </main>
 
         </div>
