@@ -4,6 +4,7 @@
 @import "@fontsource-variable/noto-sans";
 @import "@fontsource-variable/playfair-display";
 
+
 @custom-variant dark (&:is(.dark *));
 
 * {

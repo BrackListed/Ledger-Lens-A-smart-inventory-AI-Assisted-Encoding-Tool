@@ -91,35 +91,68 @@ export function Stores(){
                 </div>
 
                 <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
-                    <div className="overflow-hidden rounded-xl border border-white/10">
-                      <div className="max-h-96 overflow-y-auto overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead className="sticky top-0 z-10">
-                                <tr className="bg-emerald-950 text-white/70">
-                                    <th className="whitespace-nowrap px-4 py-2 font-medium">Date</th>
-                                    <th className="whitespace-nowrap px-4 py-2 font-medium">SKU</th>
-                                    <th className="whitespace-nowrap px-4 py-2 font-medium">Item Description</th>
-                                    <th className="whitespace-nowrap px-4 py-2 font-medium">Quantity</th>
-                                    <th className="whitespace-nowrap px-4 py-2 font-medium">Unit Price</th>
-                                    <th className="whitespace-nowrap px-4 py-2 font-medium">Preset Price</th>
-                                    <th className="whitespace-nowrap px-4 py-2 font-medium">Total</th>
-                                    <th className="whitespace-nowrap px-4 py-2 font-medium">Profit Margin</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {(filteredMaterials ?? materials).map((material) => (<tr key={material.id} className="border-t border-white/5">
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">{new Date(material.purchased_at).toLocaleString()}</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.sku}</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.description}r</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.quantity}</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.unit_price}</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.preset_price}</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.total_price}</td>
-                                    <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.profit_margin}%</td>
-                                </tr>))}
-                            </tbody>
-                        </table>
-                      </div>
+                    <div className="flex flex-col gap-6">
+                        <div>
+                            <h2 className="mb-2 text-sm font-semibold text-white/90">Materials Table</h2>
+                            <div className="overflow-hidden rounded-xl border border-white/10">
+                                <div className="max-h-96 overflow-y-auto overflow-x-auto">
+                                    <table className="w-full text-left text-sm">
+                                        <thead className="sticky top-0 z-10">
+                                            <tr className="bg-emerald-950 text-white/70">
+                                                <th className="whitespace-nowrap px-4 py-2 font-medium">Date</th>
+                                                <th className="whitespace-nowrap px-4 py-2 font-medium">SKU</th>
+                                                <th className="whitespace-nowrap px-4 py-2 font-medium">Item Description</th>
+                                                <th className="whitespace-nowrap px-4 py-2 font-medium">Quantity</th>
+                                                <th className="whitespace-nowrap px-4 py-2 font-medium">Unit Price</th>
+                                                <th className="whitespace-nowrap px-4 py-2 font-medium">Preset Price</th>
+                                                <th className="whitespace-nowrap px-4 py-2 font-medium">Total</th>
+                                                <th className="whitespace-nowrap px-4 py-2 font-medium">Profit Margin</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {(filteredMaterials ?? materials).map((material) => (<tr key={material.id} className="border-t border-white/5">
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{new Date(material.purchased_at).toLocaleString()}</td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.sku}</td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.description}r</td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.quantity}</td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.unit_price}</td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.preset_price}</td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.total_price}</td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.profit_margin}%</td>
+                                            </tr>))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h2 className="mb-2 text-sm font-semibold text-white/90">Sales Table</h2>
+                            <div className="overflow-hidden rounded-xl border border-white/10">
+                                <div className="max-h-96 overflow-y-auto overflow-x-auto">
+                                    <table className="w-full text-left text-sm">
+                                        <thead className="sticky top-0 z-10">
+                                            <tr className="bg-emerald-950 text-white/70">
+                                                <th className="whitespace-nowrap px-4 py-2 font-medium">Date</th>
+                                                <th className="whitespace-nowrap px-4 py-2 font-medium">SKU</th>
+                                                <th className="whitespace-nowrap px-4 py-2 font-medium">Quantity</th>
+                                                <th className="whitespace-nowrap px-4 py-2 font-medium">Price</th>
+                                                <th className="whitespace-nowrap px-4 py-2 font-medium">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr className="border-t border-white/5">
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">07/01/2026</td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">CM-100</td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">5</td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$30.00</td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$150.00</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="rounded-xl border border-white/10 bg-white/3 p-4">

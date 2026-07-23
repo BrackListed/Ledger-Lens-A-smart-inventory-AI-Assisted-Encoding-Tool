@@ -46,7 +46,7 @@ export function Encoder(){
         date: string
         sku: string
         quantity: number
-        price: number
+        sale_price: number
         total: number
     }
     const {getToken} = useAuth()
@@ -61,7 +61,7 @@ export function Encoder(){
     const [file, setFile] = useState<fileType | undefined>(undefined)
     const [saved, setSaved] = useState(false)
     const [saleDate, setSaleDate] = useState<Date | null>(null)
-    const [singularSale, setSingularSale] = useState<salesType>({ id: "", sku: "", quantity: 0, price: 0, date: "", total: 0 })
+    const [singularSale, setSingularSale] = useState<salesType>({ id: "", sku: "", quantity: 0, sale_price: 0, date: "", total: 0 })
     const [sales, setSales] = useState<salesType[]>([])
 
 
@@ -142,6 +142,14 @@ export function Encoder(){
                     )}
                 </div>
 
+                {!selectedStore && (
+                    <p className="mt-10 text-center text-lg font-semibold text-orange-400">
+                        Select a store first!
+                    </p>
+                )}
+
+                {selectedStore && (
+                <>
                 <div className="mt-6 flex items-center justify-between rounded-xl border border-white/10 bg-white/3 px-5 py-4">
                     <div>
                         <div className="flex items-center gap-2 text-sm">
@@ -158,7 +166,7 @@ export function Encoder(){
                             Discard File
                         </button>
                         <button onClick={() => confirmFile(file?.id)} className="rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 hover:cursor-pointer">
-                            Confirm &amp; Add to Material List
+                            Confirm &amp; Send to Material List
                         </button>
                     </div>
                 </div>
@@ -214,12 +222,12 @@ export function Encoder(){
                                     className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-white/30"
                                 />
                                 <input
-                                    onChange={(e) => setSingularSale(prev => ({...prev, quantity: Number(e.target.value), total: Number(e.target.value) * prev.price}))}
+                                    onChange={(e) => setSingularSale(prev => ({...prev, quantity: Number(e.target.value), total: Number(e.target.value) * prev.sale_price}))}
                                     placeholder="Quantity Sold"
                                     className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-white/30"
                                 />
                                 <input
-                                    onChange={(e) => setSingularSale(prev => ({...prev, price: Number(e.target.value), total: Number(e.target.value) * prev.quantity}))}
+                                    onChange={(e) => setSingularSale(prev => ({...prev, sale_price: Number(e.target.value), total: Number(e.target.value) * prev.quantity}))}
                                     placeholder="Sale Price"
                                     className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-white/30"
                                 />
@@ -245,12 +253,22 @@ export function Encoder(){
 
                     <div>
                         <p className="mb-2 text-xs text-white/50">(Bulk Upload)</p>
-                        <div className="flex h-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 bg-white/2 p-4 text-center">
+                        <label
+                            htmlFor="sales-sheet-upload"
+                            className="flex h-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 bg-white/2 p-4 text-center"
+                        >
                             <FileText className="h-6 w-6 text-white/40" />
                             <p className="text-xs text-white/50">
                                 Drag &amp; Drop Excel Sales Sheet (.csv, .xlsx)
                             </p>
-                        </div>
+                            <input
+                                id="sales-sheet-upload"
+                                type="file"
+                                accept=".csv,.xls,.xlsx"
+                                className="hidden"
+                                onChange={(e) => {if(e.target.files && e.target.files.length > 0){encodeSales(e.target.files[0], selectedStore!.id)}}}
+                            />
+                        </label>
                     </div>
                 </div>
 
@@ -270,11 +288,11 @@ export function Encoder(){
                         </thead>
                         <tbody>
                             {sales.map((sale) => (<tr key={sale.id} className="border-t border-white/5">
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.date}</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.date ?? new Date().toLocaleDateString()}</td>
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.sku}</td>
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.quantity}</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.price}</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.total}</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.sale_price}</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.total.toFixed(2)}</td>
                                 <td className="whitespace-nowrap px-4 py-2">
                                     <button onClick={() => setSales(prev => prev.filter(s => s.id !== sale.id))} className="text-white/40 hover:text-orange-400 hover:cursor-pointer">
                                         <Trash2 className="h-3.5 w-3.5" />
@@ -285,9 +303,11 @@ export function Encoder(){
                     </table>
                 </div>
 
-                <button className="mt-4 rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 hover:cursor-pointer">
+                <button onClick={() => sendSales(sales, selectedStore.id)} className="mt-4 rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 hover:cursor-pointer">
                     Forward to Stores
                 </button>
+                </>
+                )}
             </main>
 
         </div>
@@ -297,6 +317,14 @@ export function Encoder(){
         const result = await axios.patch(`http://localhost:5000/confirm/${id}`)
         setSaved(result.data)
     }
-    
+
+    async function encodeSales(file: File, storeId: string){
+        const token = await getToken()
+        const formData = new FormData()
+        formData.append("sales", file)
+        const result = await axios.post(`http://localhost:5000/encode/sales/${storeId}`, formData, {headers: {Authorization: `Bearer ${token}`}})
+        setSales(result.data)
+        console.log(result.data)
+    }
 
 }
