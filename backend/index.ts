@@ -197,6 +197,7 @@ app.post("/confirm/sales/:storeId", async(req, res) => {
   for(const sale of sales){
     await pool.query("UPDATE materials SET quantity = quantity - $1 WHERE store_id = $2 AND sku = $3", [Number(sale.quantity), req.params.storeId, sale.sku ])
   }
+  res.json(true)
 })
 
 app.get("/store", async(req, res) => {
@@ -226,6 +227,11 @@ app.patch("/confirm/:fileId", async(req, res) => {
 
 app.delete("/delete/materials/:materialId/:storeId", async(req, res) => {
   await pool.query("DELETE FROM materials WHERE id = $1 AND store_id = $2", [req.params.materialId, req.params.storeId])
+  res.json(true)
+})
+
+app.delete("/delete/file/:fileId/:storeId", async(req, res) => {
+  await pool.query("DELETE FROM file WHERE id = $1 and store_id = $2", [req.params.fileId, req.params.storeId])
   res.json(true)
 })
 

@@ -44,6 +44,7 @@ export function Stores(){
     const [selectedStore, setSelectedStore] = useState<storeType | undefined>(undefined)
     const filteredMaterials = selectedFile ? materials.filter((m) => m.file_id === selectedFile.id) : null
     const [deletedMaterial, setDeletedMaterial] = useState(false)
+    const [deletedFile, setDeletedFile] = useState(false)
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -76,7 +77,13 @@ export function Stores(){
                 setDeletedMaterial(false)
             }, 1000);
         }
-    }, [deletedMaterial])
+        if(deletedFile){
+            fetchMaterialData()
+            setTimeout(() => {
+                setDeletedFile(false)
+            }, 1000);
+        }
+    }, [deletedMaterial, deletedFile])
     return(
         <div className="relative min-h-screen overflow-hidden bg-[#060a09] text-white">
             <Header/>
@@ -107,7 +114,7 @@ export function Stores(){
                 </div>
 
                 <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
-                    <div className="flex flex-col gap-6">
+                    <div className="flex min-w-0 flex-col gap-6">
                         <div>
                             <h2 className="mb-2 text-sm font-semibold text-white/90">Materials Table</h2>
                             <div className="overflow-hidden rounded-xl border border-white/10">
@@ -136,9 +143,11 @@ export function Stores(){
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.preset_price}</td>
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.total_price}</td>
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.profit_margin}%</td>
-                                                <button onClick={() => deleteMaterial(material.id, selectedStore!.id)} className="p-3 text-white/40 hover:text-orange-400 hover:cursor-pointer">
-                                                    <Trash2 className="h-3.5 w-3.5" />
-                                                </button>
+                                                <td className="whitespace-nowrap px-4 py-2">
+                                                    <button onClick={() => deleteMaterial(material.id, selectedStore!.id)} className="text-white/40 hover:text-orange-400 hover:cursor-pointer">
+                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                    </button>
+                                                </td>
                                             </tr>))}
                                         </tbody>
                                     </table>
@@ -175,8 +184,8 @@ export function Stores(){
                         </div>
                     </div>
 
-                    <div className="rounded-xl border border-white/10 bg-white/3 p-4">
-                        <p className="text-sm font-semibold text-white/90">Selected File: {selectedFile?.filename}</p>
+                    <div className="min-w-0 rounded-xl border border-white/10 bg-white/3 p-4">
+                        <p className="truncate text-sm font-semibold text-white/90">Selected File: {selectedFile?.filename}</p>
                         <div className="mt-3 space-y-2">
                             {files?.map((file) => (
                                 <div
@@ -184,12 +193,18 @@ export function Stores(){
                                     onClick={() => setSelectedFile(selectedFile?.id === file.id ? undefined : file)}
                                     className={
                                         selectedFile?.id === file.id
-                                            ? "flex cursor-pointer items-center gap-2 rounded-lg border border-emerald-400/50 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-300 transition"
-                                            : "flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 transition hover:border-emerald-400/30 hover:text-white"
+                                            ? "flex w-full cursor-pointer items-center gap-2 rounded-lg border border-emerald-400/50 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-300 transition"
+                                            : "flex w-full cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 transition hover:border-emerald-400/30 hover:text-white"
                                     }
                                 >
                                     <FileText className="h-4 w-4 shrink-0" />
-                                    {file.filename}
+                                    <span className="min-w-0 flex-1 truncate">{file.filename}</span>
+                                    <button
+                                        onClick={() => deleteFile(file.id, selectedStore!.id)}
+                                        className="shrink-0 text-white/40 hover:text-orange-400 hover:cursor-pointer"
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -203,6 +218,13 @@ export function Stores(){
                     Material deleted
                 </div>
             )}
+
+            {deletedFile && (
+                <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-lg bg-red-500 px-4 py-3 text-sm font-medium text-red-950 shadow-xl">
+                    <Trash2 className="h-4 w-4" />
+                    File successfully deleted
+                </div>
+            )}
         </div>
     )
 
@@ -211,5 +233,11 @@ export function Stores(){
         const token = getToken()
         const result = await axios.delete(`http://localhost:5000/delete/materials/${materialId}/${storeId}`, {headers: {Authorization: `Bearer ${token}`}})
         setDeletedMaterial(result.data)
+    }
+
+    async function deleteFile(fileId: number, storeId: string){
+        const token = getToken()
+        const result = await axios.delete(`http://localhost:5000/delete/file/${fileId}/${storeId}`, {headers: {Authorization: `Bearer ${token}`}})
+        setDeletedFile(result.data)
     }
 }
