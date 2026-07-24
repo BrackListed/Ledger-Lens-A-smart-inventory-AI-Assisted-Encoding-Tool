@@ -38,7 +38,8 @@ export const sales = pgTable("sales", {
     quantity: integer("quantity"),
     sale_price: numeric("sale_price"),
     total: numeric('total'),
-    sale_date: timestamp("sale_date", {withTimezone: true}).defaultNow().notNull()
+    sale_date: timestamp("sale_date", {withTimezone: true}).defaultNow().notNull(),
+    sku: text('sku')
 })
 
 export const file = pgTable("file", {

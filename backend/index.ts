@@ -192,6 +192,13 @@ app.post("/encode/sales/:storeId", upload.single("sales"), async(req, res) => {
   res.json(sales)
 })
 
+app.post("/confirm/sales/:storeId", async(req, res) => {
+  const sales = req.body.sales
+  for(const sale of sales){
+    await pool.query("UPDATE materials SET quantity = quantity - $1 WHERE store_id = $2 AND sku = $3", [Number(sale.quantity), req.params.storeId, sale.sku ])
+  }
+})
+
 app.get("/store", async(req, res) => {
   const {userId} = getAuth(req)
   const fetch = await pool.query("SELECT id FROM users WHERE clerk_user_id = $1", [userId])
@@ -214,6 +221,11 @@ app.get("/completed/:storeId", async(req, res) => {
 
 app.patch("/confirm/:fileId", async(req, res) => {
   await pool.query("UPDATE file SET status = $1 WHERE id = $2", ['Confirmed', req.params.fileId])
+  res.json(true)
+})
+
+app.delete("/delete/materials/:materialId/:storeId", async(req, res) => {
+  await pool.query("DELETE FROM materials WHERE id = $1 AND store_id = $2", [req.params.materialId, req.params.storeId])
   res.json(true)
 })
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Header } from "../assets/Header";
 import { useAuth } from "@clerk/react";
 import axios from "axios";
-import { FileText } from "lucide-react";
+import { FileText, Trash2 } from "lucide-react";
 
 export function Stores(){
     interface storeType{
@@ -43,6 +43,7 @@ export function Stores(){
     const [selectedFile, setSelectedFile] = useState<fileType | undefined>(undefined)
     const [selectedStore, setSelectedStore] = useState<storeType | undefined>(undefined)
     const filteredMaterials = selectedFile ? materials.filter((m) => m.file_id === selectedFile.id) : null
+    const [deletedMaterial, setDeletedMaterial] = useState(false)
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -61,6 +62,21 @@ export function Stores(){
         }
         fetchMaterialData()
     }, [selectedStore])
+    useEffect(() => {
+        if(!selectedStore) return 
+        const fetchMaterialData = async() => {
+            const token = await getToken()
+            const result = await axios.get(`http://localhost:5000/completed/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
+            setMaterials(result.data.materials)
+            setFiles(result.data.files)
+        }
+        if(deletedMaterial){
+            fetchMaterialData()
+            setTimeout(() => {
+                setDeletedMaterial(false)
+            }, 1000);
+        }
+    }, [deletedMaterial])
     return(
         <div className="relative min-h-screen overflow-hidden bg-[#060a09] text-white">
             <Header/>
@@ -107,6 +123,7 @@ export function Stores(){
                                                 <th className="whitespace-nowrap px-4 py-2 font-medium">Preset Price</th>
                                                 <th className="whitespace-nowrap px-4 py-2 font-medium">Total</th>
                                                 <th className="whitespace-nowrap px-4 py-2 font-medium">Profit Margin</th>
+                                                <th className="whitespace-nowrap px-4 py-2 font-medium">Delete</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -119,6 +136,9 @@ export function Stores(){
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.preset_price}</td>
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.total_price}</td>
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.profit_margin}%</td>
+                                                <button onClick={() => deleteMaterial(material.id, selectedStore!.id)} className="p-3 text-white/40 hover:text-orange-400 hover:cursor-pointer">
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                </button>
                                             </tr>))}
                                         </tbody>
                                     </table>
@@ -176,6 +196,20 @@ export function Stores(){
                     </div>
                 </div>
             </main>
+
+            {deletedMaterial && (
+                <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-lg bg-red-500 px-4 py-3 text-sm font-medium text-red-950 shadow-xl">
+                    <Trash2 className="h-4 w-4" />
+                    Material deleted
+                </div>
+            )}
         </div>
     )
+
+
+    async function deleteMaterial(materialId: number, storeId: string){
+        const token = getToken()
+        const result = await axios.delete(`http://localhost:5000/delete/materials/${materialId}/${storeId}`, {headers: {Authorization: `Bearer ${token}`}})
+        setDeletedMaterial(result.data)
+    }
 }

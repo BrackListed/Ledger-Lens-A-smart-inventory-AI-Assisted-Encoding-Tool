@@ -63,7 +63,7 @@ export function Encoder(){
     const [saleDate, setSaleDate] = useState<Date | null>(null)
     const [singularSale, setSingularSale] = useState<salesType>({ id: "", sku: "", quantity: 0, sale_price: 0, date: "", total: 0 })
     const [sales, setSales] = useState<salesType[]>([])
-
+    const [forwardedToStore, setForwardedToStore] = useState(false)
 
     useEffect(() => {
         const fetchStoresData = async() => {
@@ -92,6 +92,14 @@ export function Encoder(){
             }, 1000);
         }
     }, [saved])
+
+    useEffect(() => {
+        if(forwardedToStore){
+            setTimeout(() => {
+                setForwardedToStore(false)
+            }, 1000);
+        }
+    }, [forwardedToStore])
     return(
         <div className="relative min-h-screen overflow-hidden bg-[#060a09] text-white">
             <Header/>
@@ -308,6 +316,13 @@ export function Encoder(){
                 </button>
                 </>
                 )}
+
+                {forwardedToStore && (
+                    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-lg bg-emerald-400 px-4 py-3 text-sm font-medium text-emerald-950 shadow-xl">
+                        <CheckCircle2 className="h-4 w-4" />
+                        Sales forwarded to store successfully
+                    </div>
+                )}
             </main>
 
         </div>
@@ -324,7 +339,11 @@ export function Encoder(){
         formData.append("sales", file)
         const result = await axios.post(`http://localhost:5000/encode/sales/${storeId}`, formData, {headers: {Authorization: `Bearer ${token}`}})
         setSales(result.data)
-        console.log(result.data)
+    }
+
+    async function sendSales(sales: salesType[], storeId: string){
+        const result = await axios.post(`http://localhost:5000/confirm/sales/${storeId}`, {sales: sales})
+        setForwardedToStore(result.data)
     }
 
 }
