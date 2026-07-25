@@ -34,6 +34,14 @@ export function Stores(){
         upload_date: string
         user_id: string
     }
+    interface salesType{
+        id: string
+        date: string
+        sku: string
+        quantity: number
+        sale_price: number
+        total: number
+    }
     const {getToken} = useAuth()
     const [stores, setStores] = useState<storeType[]>([])
     const [searchQuery, setSearchQuery] = useState("")
@@ -45,6 +53,8 @@ export function Stores(){
     const filteredMaterials = selectedFile ? materials.filter((m) => m.file_id === selectedFile.id) : null
     const [deletedMaterial, setDeletedMaterial] = useState(false)
     const [deletedFile, setDeletedFile] = useState(false)
+    const [sales, setSales] = useState<salesType[]>([])
+
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -52,6 +62,12 @@ export function Stores(){
             setStores(result.data)
         }
         fetchStoresData()
+        const fetchSalesData = async() => {
+            const token = await getToken()
+            const result = await axios.get(`http://localhost:5000/sales/${selectedStore?.id}`, {headers: {Authorization: `Bearer ${token}`}})
+            setSales(result.data)
+        }
+        fetchSalesData()
     }, [])
     useEffect(() => {
         if(!selectedStore) return 
@@ -170,13 +186,13 @@ export function Stores(){
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr className="border-t border-white/5">
-                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">07/01/2026</td>
-                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">CM-100</td>
-                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">5</td>
-                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$30.00</td>
-                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">$150.00</td>
-                                            </tr>
+                                            {sales.map((sale) => (<tr className="border-t border-white/5">
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.date}</td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.sku}</td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.quantity}</td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">${sale.sale_price}</td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">${sale.total}</td>
+                                            </tr>))}
                                         </tbody>
                                     </table>
                                 </div>

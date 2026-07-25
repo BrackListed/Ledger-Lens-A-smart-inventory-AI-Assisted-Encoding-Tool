@@ -11,7 +11,7 @@ import multer from "multer"
 import path from "path"
 import * as XLSX from "xlsx"
 import { materials } from "./db/schema"
-
+const { randomUUID } = require('crypto')
 
 const app = express()
 const pool = new Pool({connectionString: process.env.DATABASE_URL})
@@ -182,6 +182,7 @@ app.post("/encode/sales/:storeId", upload.single("sales"), async(req, res) => {
     const quantity = sales[columns.quantity]
     const total = Number(price) * Number(quantity)
     return {
+      id: randomUUID(),
       sku: sales[columns.sku],
       quantity: sales[columns.quantity],
       sale_price: sales[columns.sale_price],
