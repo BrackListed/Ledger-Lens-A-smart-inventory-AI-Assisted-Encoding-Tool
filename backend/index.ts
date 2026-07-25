@@ -221,6 +221,11 @@ app.get("/completed/:storeId", async(req, res) => {
   res.json({materials: materials.rows, files: file.rows})
 })
 
+app.get("/sales/:storeId", async(req, res) => {
+  const sales = await pool.query("SELECT * FROM sales WHERE store_id = $1", [req.params.storeId])
+  res.json(sales.rows)
+})
+
 app.patch("/confirm/:fileId", async(req, res) => {
   await pool.query("UPDATE file SET status = $1 WHERE id = $2", ['Confirmed', req.params.fileId])
   res.json(true)
