@@ -13,58 +13,13 @@ import {
     Trash2,
     Upload,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Header } from "../assets/Header";
 
 type SettingsTab = "set prices" | "thresholds" | "store management" | "cost sheet";
 
-type PriceRow = {
-    sku: string;
-    description: string;
-    cost: string;
-    markup: string;
-    sellPrice: string;
-};
-
-const tabs: SettingsTab[] = ["set prices", "thresholds", "store management", "cost sheet"];
-
-const priceRows: PriceRow[] = [
-    { sku: "MAT-001", description: "Stainless Steel Bolts", cost: "0.45", markup: "35%", sellPrice: "$0.61" },
-    { sku: "MAT-004", description: "Aluminum Sheet 2mm", cost: "125.00", markup: "35%", sellPrice: "$168.75" },
-    { sku: "MAT-007", description: "Carbon Fiber Panel", cost: "450.00", markup: "40%", sellPrice: "$630.00" },
-    { sku: "MAT-008", description: "Brass Fittings Pack", cost: "18.25", markup: "35%", sellPrice: "$24.64" },
-];
-
-const storeRows = [
-    { name: "T-Shirt Store", status: "Active", updated: "Today" },
-    { name: "Warehouse East", status: "Synced", updated: "2h ago" },
-    { name: "Pop-up Market", status: "Draft", updated: "Yesterday" },
-];
-
 export function Settings() {
     const [activeTab, setActiveTab] = useState<SettingsTab>("set prices");
-
-    const tabCopy = useMemo(
-        () => ({
-            "set prices": {
-                title: "Preset pricing",
-                subtitle: "Set a baseline cost and markup per SKU. Sell price updates automatically.",
-            },
-            thresholds: {
-                title: "Anomaly thresholds",
-                subtitle: "Define the price jump and margin rules that trigger review warnings.",
-            },
-            "store management": {
-                title: "Store management",
-                subtitle: "Rename or remove stores from one clean control surface.",
-            },
-            "cost sheet": {
-                title: "Preset cost sheet",
-                subtitle: "Upload a baseline sheet so unit cost values can populate automatically.",
-            },
-        }),
-        []
-    );
 
     return (
         <div className="relative min-h-screen overflow-hidden bg-[#050907] text-white">
@@ -82,10 +37,22 @@ export function Settings() {
                                 Settings hub
                             </div>
                             <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                                {tabCopy[activeTab].title}
+                                {activeTab === "set prices"
+                                    ? "Preset pricing"
+                                    : activeTab === "thresholds"
+                                        ? "Anomaly thresholds"
+                                        : activeTab === "store management"
+                                            ? "Store management"
+                                            : "Preset cost sheet"}
                             </h1>
                             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/55 sm:text-base">
-                                {tabCopy[activeTab].subtitle}
+                                {activeTab === "set prices"
+                                    ? "Set a baseline cost and markup per SKU. Sell price updates automatically."
+                                    : activeTab === "thresholds"
+                                        ? "Define the price jump and margin rules that trigger review warnings."
+                                        : activeTab === "store management"
+                                            ? "Rename or remove stores from one clean control surface."
+                                            : "Upload a baseline sheet so unit cost values can populate automatically."}
                             </p>
                         </div>
 
@@ -104,30 +71,34 @@ export function Settings() {
                     </div>
 
                     <div className="mt-8 flex flex-wrap items-center gap-3 rounded-2xl border border-white/8 bg-[#0b110f] p-2">
-                        {tabs.map((tab) => {
-                            const isActive = activeTab === tab;
-
-                            return (
-                                <button
-                                    key={tab}
-                                    type="button"
-                                    onClick={() => setActiveTab(tab)}
-                                    className={
-                                        isActive
-                                            ? "rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#05110b] shadow-sm transition"
-                                            : "rounded-full px-4 py-2 text-sm font-medium text-white/65 transition hover:bg-white/5 hover:text-white"
-                                    }
-                                >
-                                    {tab === "set prices"
-                                        ? "Set prices"
-                                        : tab === "store management"
-                                            ? "Store management"
-                                            : tab === "cost sheet"
-                                                ? "Preset cost sheet"
-                                                : "Anomaly thresholds"}
-                                </button>
-                            );
-                        })}
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab("set prices")}
+                            className={activeTab === "set prices" ? "rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#05110b] shadow-sm transition" : "rounded-full px-4 py-2 text-sm font-medium text-white/65 transition hover:bg-white/5 hover:text-white"}
+                        >
+                            Set prices
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab("thresholds")}
+                            className={activeTab === "thresholds" ? "rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#05110b] shadow-sm transition" : "rounded-full px-4 py-2 text-sm font-medium text-white/65 transition hover:bg-white/5 hover:text-white"}
+                        >
+                            Anomaly thresholds
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab("store management")}
+                            className={activeTab === "store management" ? "rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#05110b] shadow-sm transition" : "rounded-full px-4 py-2 text-sm font-medium text-white/65 transition hover:bg-white/5 hover:text-white"}
+                        >
+                            Store management
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab("cost sheet")}
+                            className={activeTab === "cost sheet" ? "rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#05110b] shadow-sm transition" : "rounded-full px-4 py-2 text-sm font-medium text-white/65 transition hover:bg-white/5 hover:text-white"}
+                        >
+                            Preset cost sheet
+                        </button>
                     </div>
 
                     {activeTab === "set prices" && (
@@ -160,25 +131,34 @@ export function Settings() {
                                         <span className="text-right">Markup</span>
                                         <span className="text-right">Sell price</span>
                                     </div>
-
-                                    {priceRows.map((row) => (
-                                        <div
-                                            key={row.sku}
-                                            className="grid grid-cols-[1.15fr_2fr_0.9fr_0.9fr_0.9fr] items-center border-b border-white/8 px-4 py-4 last:border-b-0"
-                                        >
-                                            <span className="text-sm font-medium text-blue-300">{row.sku}</span>
-                                            <span className="pr-3 text-sm font-medium text-white">{row.description}</span>
-                                            <div className="justify-self-end rounded-xl border border-white/8 bg-white/3 px-3 py-2 text-sm font-semibold text-white">
-                                                {row.cost}
-                                            </div>
-                                            <div className="justify-self-end rounded-xl border border-white/8 bg-white/3 px-3 py-2 text-sm font-semibold text-white">
-                                                {row.markup}
-                                            </div>
-                                            <div className="justify-self-end text-sm font-semibold text-white/80">
-                                                {row.sellPrice}
-                                            </div>
-                                        </div>
-                                    ))}
+                                    <div className="grid grid-cols-[1.15fr_2fr_0.9fr_0.9fr_0.9fr] items-center border-b border-white/8 px-4 py-4">
+                                        <span className="text-sm font-medium text-blue-300">MAT-001</span>
+                                        <span className="pr-3 text-sm font-medium text-white">Stainless Steel Bolts</span>
+                                        <div className="justify-self-end rounded-xl border border-white/8 bg-white/3 px-3 py-2 text-sm font-semibold text-white">0.45</div>
+                                        <div className="justify-self-end rounded-xl border border-white/8 bg-white/3 px-3 py-2 text-sm font-semibold text-white">35%</div>
+                                        <div className="justify-self-end text-sm font-semibold text-white/80">$0.61</div>
+                                    </div>
+                                    <div className="grid grid-cols-[1.15fr_2fr_0.9fr_0.9fr_0.9fr] items-center border-b border-white/8 px-4 py-4">
+                                        <span className="text-sm font-medium text-blue-300">MAT-004</span>
+                                        <span className="pr-3 text-sm font-medium text-white">Aluminum Sheet 2mm</span>
+                                        <div className="justify-self-end rounded-xl border border-white/8 bg-white/3 px-3 py-2 text-sm font-semibold text-white">125.00</div>
+                                        <div className="justify-self-end rounded-xl border border-white/8 bg-white/3 px-3 py-2 text-sm font-semibold text-white">35%</div>
+                                        <div className="justify-self-end text-sm font-semibold text-white/80">$168.75</div>
+                                    </div>
+                                    <div className="grid grid-cols-[1.15fr_2fr_0.9fr_0.9fr_0.9fr] items-center border-b border-white/8 px-4 py-4">
+                                        <span className="text-sm font-medium text-blue-300">MAT-007</span>
+                                        <span className="pr-3 text-sm font-medium text-white">Carbon Fiber Panel</span>
+                                        <div className="justify-self-end rounded-xl border border-white/8 bg-white/3 px-3 py-2 text-sm font-semibold text-white">450.00</div>
+                                        <div className="justify-self-end rounded-xl border border-white/8 bg-white/3 px-3 py-2 text-sm font-semibold text-white">40%</div>
+                                        <div className="justify-self-end text-sm font-semibold text-white/80">$630.00</div>
+                                    </div>
+                                    <div className="grid grid-cols-[1.15fr_2fr_0.9fr_0.9fr_0.9fr] items-center px-4 py-4">
+                                        <span className="text-sm font-medium text-blue-300">MAT-008</span>
+                                        <span className="pr-3 text-sm font-medium text-white">Brass Fittings Pack</span>
+                                        <div className="justify-self-end rounded-xl border border-white/8 bg-white/3 px-3 py-2 text-sm font-semibold text-white">18.25</div>
+                                        <div className="justify-self-end rounded-xl border border-white/8 bg-white/3 px-3 py-2 text-sm font-semibold text-white">35%</div>
+                                        <div className="justify-self-end text-sm font-semibold text-white/80">$24.64</div>
+                                    </div>
                                 </div>
 
                                 <div className="mt-4 flex items-center justify-between gap-4 rounded-2xl border border-white/8 bg-white/3 px-4 py-3 text-sm text-white/60">
@@ -317,44 +297,69 @@ export function Settings() {
                                 </div>
 
                                 <div className="mt-5 space-y-3">
-                                    {storeRows.map((store, index) => (
-                                        <div
-                                            key={store.name}
-                                            className="rounded-2xl border border-white/8 bg-white/3 p-4"
-                                        >
-                                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                                <div>
-                                                    <p className="text-base font-medium text-white">{store.name}</p>
-                                                    <p className="mt-1 text-sm text-white/45">
-                                                        {store.status} · updated {store.updated}
-                                                    </p>
-                                                </div>
-
-                                                <div className="flex flex-wrap gap-2">
-                                                    <button
-                                                        type="button"
-                                                        className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-[#0c1210] px-3 py-2 text-sm text-white/75 transition hover:text-white"
-                                                    >
-                                                        <PencilLine className="h-4 w-4 text-emerald-300" />
-                                                        Rename
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        className="inline-flex items-center gap-2 rounded-full border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-200 transition hover:bg-rose-500/15"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                        Delete
-                                                    </button>
-                                                </div>
+                                    <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
+                                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                            <div>
+                                                <p className="text-base font-medium text-white">T-Shirt Store</p>
+                                                <p className="mt-1 text-sm text-white/45">Active · updated Today</p>
                                             </div>
 
-                                            {index === 0 && (
-                                                <div className="mt-4 rounded-2xl border border-emerald-400/15 bg-emerald-400/8 px-4 py-3 text-sm text-emerald-100">
-                                                    Active store. Pricing and thresholds on this page reference the selected store.
-                                                </div>
-                                            )}
+                                            <div className="flex flex-wrap gap-2">
+                                                <button type="button" className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-[#0c1210] px-3 py-2 text-sm text-white/75 transition hover:text-white">
+                                                    <PencilLine className="h-4 w-4 text-emerald-300" />
+                                                    Rename
+                                                </button>
+                                                <button type="button" className="inline-flex items-center gap-2 rounded-full border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-200 transition hover:bg-rose-500/15">
+                                                    <Trash2 className="h-4 w-4" />
+                                                    Delete
+                                                </button>
+                                            </div>
                                         </div>
-                                    ))}
+
+                                        <div className="mt-4 rounded-2xl border border-emerald-400/15 bg-emerald-400/8 px-4 py-3 text-sm text-emerald-100">
+                                            Active store. Pricing and thresholds on this page reference the selected store.
+                                        </div>
+                                    </div>
+
+                                    <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
+                                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                            <div>
+                                                <p className="text-base font-medium text-white">Warehouse East</p>
+                                                <p className="mt-1 text-sm text-white/45">Synced · updated 2h ago</p>
+                                            </div>
+
+                                            <div className="flex flex-wrap gap-2">
+                                                <button type="button" className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-[#0c1210] px-3 py-2 text-sm text-white/75 transition hover:text-white">
+                                                    <PencilLine className="h-4 w-4 text-emerald-300" />
+                                                    Rename
+                                                </button>
+                                                <button type="button" className="inline-flex items-center gap-2 rounded-full border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-200 transition hover:bg-rose-500/15">
+                                                    <Trash2 className="h-4 w-4" />
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
+                                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                            <div>
+                                                <p className="text-base font-medium text-white">Pop-up Market</p>
+                                                <p className="mt-1 text-sm text-white/45">Draft · updated Yesterday</p>
+                                            </div>
+
+                                            <div className="flex flex-wrap gap-2">
+                                                <button type="button" className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-[#0c1210] px-3 py-2 text-sm text-white/75 transition hover:text-white">
+                                                    <PencilLine className="h-4 w-4 text-emerald-300" />
+                                                    Rename
+                                                </button>
+                                                <button type="button" className="inline-flex items-center gap-2 rounded-full border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-200 transition hover:bg-rose-500/15">
+                                                    <Trash2 className="h-4 w-4" />
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </section>
 
@@ -394,7 +399,7 @@ export function Settings() {
                                         <Upload className="h-8 w-8 text-emerald-300" />
                                         <p className="mt-4 text-lg font-semibold text-white">Drop a preset cost sheet</p>
                                         <p className="mt-2 max-w-sm text-sm leading-relaxed text-white/55">
-                                            CSV or spreadsheet files can populate Unit Cost (Preset) so pricing rules stay consistent.
+                                            CSV or spreadsheet files can populate Unit Cost (Preset) so pricing stays consistent.
                                         </p>
                                         <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/8 bg-white/3 px-4 py-2 text-sm text-white/70">
                                             Browse files
@@ -408,11 +413,11 @@ export function Settings() {
                                         </div>
                                         <div className="rounded-2xl border border-white/8 bg-[#0c1210] p-4">
                                             <p className="text-sm text-white/55">Auto-fill goal</p>
-                                            <p className="mt-2 text-sm text-white/75">Price rows can hydrate from the uploaded baseline file.</p>
+                                            <p className="mt-2 text-sm text-white/75">Price rows can fill from the uploaded baseline file.</p>
                                         </div>
                                         <div className="rounded-2xl border border-white/8 bg-[#0c1210] p-4">
                                             <p className="text-sm text-white/55">Status</p>
-                                            <p className="mt-2 text-sm text-white/75">No file uploaded yet.</p>
+                                            <p className="mt-2 text-sm text-white/75">Ready for upload.</p>
                                         </div>
                                     </div>
                                 </div>
