@@ -203,7 +203,7 @@ app.post("/encode/sales/:storeId", upload.single("sales"), async(req, res) => {
   res.json({sales: sales, id: result.rows[0].id, message: "Successfully encoded sales", status: true})
 })
 
-app.post("/confirm/sales/:storeId/:fileId", async(req, res) => {
+app.post("/confirm/sales/:fileId", async(req, res) => {
   await pool.query("UPDATE file SET status = $1 WHERE id = $2", ["Confirmed", req.params.fileId])
   res.json(true)
 })
@@ -222,15 +222,19 @@ app.get("/materials/:storeId", async(req, res) => {
   res.json({materials: result.rows, file: file.rows})
 })
 
+
 app.get("/completed/:storeId", async(req, res) => {
   const file = await pool.query("SELECT * FROM file WHERE store_id = $1 AND status = $2", [req.params.storeId, 'Confirmed'])
   const materials = await pool.query("SELECT materials.* FROM materials JOIN file ON materials.file_id = file.id WHERE materials.store_id = $1 AND file.status = 'Confirmed'", [req.params.storeId])
-  res.json({materials: materials.rows, files: file.rows})
+  const sales = await pool.query("SELECT sales.* FROM sales JOIN file ON sales.file_id = file.id WHERE sales.store_id = $1 AND file.status = 'Confirmed'", [req.params.storeId])
+  res.json({materials: materials.rows, files: file.rows, sales: sales.rows})
 })
+
 
 app.get("/sales/:storeId", async(req, res) => {
   const sales = await pool.query("SELECT sales.* FROM sales JOIN file ON sales.file_id = file.id WHERE sales.store_id = $1 AND file.status = 'Pending'", [req.params.storeId])
-  res.json(sales.rows)
+  const file = await pool.query("SELECT * FROM file WHERE store_id = $1 AND status = $2 AND type = $3", [req.params.storeId, 'Pending', 'Sales'])
+  res.json({sales: sales.rows, file: file.rows})
 })
 
 

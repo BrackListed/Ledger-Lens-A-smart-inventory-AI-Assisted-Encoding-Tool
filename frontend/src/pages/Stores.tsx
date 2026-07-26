@@ -70,14 +70,9 @@ export function Stores(){
             const result = await axios.get(`http://localhost:5000/completed/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
             setMaterials(result.data.materials)
             setFiles(result.data.files)
-        }
-        const fetchSalesData = async() => {
-            const token = await getToken()
-            const result = await axios.get(`http://localhost:5000/sales/${selectedStore?.id}`, {headers: {Authorization: `Bearer ${token}`}})
-            setSales(result.data)
+            setSales(result.data.sales)
         }
         fetchMaterialData()
-        fetchSalesData()
     }, [selectedStore])
     useEffect(() => {
         if(!selectedStore) return 
@@ -186,13 +181,13 @@ export function Stores(){
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {sales.map((sale) => (<tr className="border-t border-white/5">
+                                            {sales.length > 0 ? sales.map((sale) => (<tr className="border-t border-white/5">
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{new Date(sale.sale_date).toLocaleDateString()}</td>
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.sku}</td>
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.quantity}</td>
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">${Number(sale.sale_price).toFixed(2)}</td>
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">${Number(sale.total).toFixed(2)}</td>
-                                            </tr>))}
+                                            </tr>)) : <tr><td colSpan={5} className="px-4 py-6 text-center text-white/40">No sales yet</td></tr>} 
                                         </tbody>
                                     </table>
                                 </div>
