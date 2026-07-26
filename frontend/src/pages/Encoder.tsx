@@ -90,8 +90,10 @@ export function Encoder(){
             if(!selectedStore) return 
             const token = await getToken()
             const result = await axios.get(`http://localhost:5000/sales/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
-            console.log(result.data)
-            setSales(result.data)
+            console.log(result.data.file)
+            setSales(result.data.sales)
+            setSalesFileName(result.data.file[0].filename)
+            setSalesFileId(result.data.file[0].id)
         }
         fetchSalesData()
     }, [selectedStore])
@@ -336,7 +338,7 @@ export function Encoder(){
                     </table>
                 </div>
 
-                <button onClick={() => sendSales(sales, selectedStore.id)} className="mt-4 rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 hover:cursor-pointer">
+                <button onClick={() => sendSales(sales, salesFileId)} className="mt-4 rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 hover:cursor-pointer">
                     Forward to Stores
                 </button>
                 </>
@@ -382,8 +384,8 @@ export function Encoder(){
         setSuccessMessage(result.data.message)
     }
 
-    async function sendSales(sales: salesType[], storeId: string){
-        const result = await axios.post(`http://localhost:5000/confirm/sales/${storeId}/${salesFileId}`, {sales: sales})
+    async function sendSales(sales: salesType[], fileId: number){
+        const result = await axios.post(`http://localhost:5000/confirm/sales/${fileId}`, {sales: sales})
         setForwardedToStore(result.data)
     }
 
