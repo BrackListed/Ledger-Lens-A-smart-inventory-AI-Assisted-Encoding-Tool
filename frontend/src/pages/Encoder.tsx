@@ -64,7 +64,8 @@ export function Encoder(){
     const [singularSale, setSingularSale] = useState<salesType>({ id: "", sku: "", quantity: 0, sale_price: 0, date: "", total: 0 })
     const [sales, setSales] = useState<salesType[]>([])
     const [forwardedToStore, setForwardedToStore] = useState(false)
-
+    const [salesFileId, setSalesFileId] = useState(0)
+    const [salesFileName, setSalesFileName] = useState("")
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -274,13 +275,19 @@ export function Encoder(){
                                 type="file"
                                 accept=".csv,.xls,.xlsx"
                                 className="hidden"
-                                onChange={(e) => {if(e.target.files && e.target.files.length > 0){encodeSales(e.target.files[0], selectedStore!.id)}}}
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        encodeSales(file, selectedStore!.id, file.name);
+                                        setSalesFileName(file.name);
+                                    }
+                                }}
                             />
                         </label>
                     </div>
                 </div>
 
-                <h2 className="mt-10 text-sm font-semibold text-white/90">Sales Table</h2>
+                <h2 className="mt-10 text-sm font-semibold text-white/90">Sales Table: {salesFileName}</h2>
 
                 <div className="mt-3 overflow-x-auto rounded-xl border border-white/10">
                     <table className="w-full text-left text-sm">
@@ -333,16 +340,19 @@ export function Encoder(){
         setSaved(result.data)
     }
 
-    async function encodeSales(file: File, storeId: string){
+    async function encodeSales(file: File, storeId: string, name: string){
         const token = await getToken()
         const formData = new FormData()
         formData.append("sales", file)
+        formData.append("name", name)
         const result = await axios.post(`http://localhost:5000/encode/sales/${storeId}`, formData, {headers: {Authorization: `Bearer ${token}`}})
-        setSales(result.data)
+        setSales(result.data.sales)
+        setSalesFileId(result.data.id)
     }
 
     async function sendSales(sales: salesType[], storeId: string){
-        const result = await axios.post(`http://localhost:5000/confirm/sales/${storeId}`, {sales: sales})
+        console.log(sales)
+        const result = await axios.post(`http://localhost:5000/confirm/sales/${storeId}/${salesFileId}`, {sales: sales})
         setForwardedToStore(result.data)
     }
 

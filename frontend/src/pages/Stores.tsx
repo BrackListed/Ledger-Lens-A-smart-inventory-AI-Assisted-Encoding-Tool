@@ -36,7 +36,7 @@ export function Stores(){
     }
     interface salesType{
         id: string
-        date: string
+        sale_date: string
         sku: string
         quantity: number
         sale_price: number
@@ -62,12 +62,6 @@ export function Stores(){
             setStores(result.data)
         }
         fetchStoresData()
-        const fetchSalesData = async() => {
-            const token = await getToken()
-            const result = await axios.get(`http://localhost:5000/sales/${selectedStore?.id}`, {headers: {Authorization: `Bearer ${token}`}})
-            setSales(result.data)
-        }
-        fetchSalesData()
     }, [])
     useEffect(() => {
         if(!selectedStore) return 
@@ -77,7 +71,13 @@ export function Stores(){
             setMaterials(result.data.materials)
             setFiles(result.data.files)
         }
+        const fetchSalesData = async() => {
+            const token = await getToken()
+            const result = await axios.get(`http://localhost:5000/sales/${selectedStore?.id}`, {headers: {Authorization: `Bearer ${token}`}})
+            setSales(result.data)
+        }
         fetchMaterialData()
+        fetchSalesData()
     }, [selectedStore])
     useEffect(() => {
         if(!selectedStore) return 
@@ -187,11 +187,11 @@ export function Stores(){
                                         </thead>
                                         <tbody>
                                             {sales.map((sale) => (<tr className="border-t border-white/5">
-                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.date}</td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{new Date(sale.sale_date).toLocaleDateString()}</td>
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.sku}</td>
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.quantity}</td>
-                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">${sale.sale_price}</td>
-                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">${sale.total}</td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">${Number(sale.sale_price).toFixed(2)}</td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">${Number(sale.total).toFixed(2)}</td>
                                             </tr>))}
                                         </tbody>
                                     </table>

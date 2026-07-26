@@ -88,7 +88,7 @@ app.post("/encode/:storeId", upload.single("file"), async(req, res) => {
   if(pending.rows.length > 0) {
     return res.json({message: "You have items on pending. Verify them before adding a new one!", status: false})
   }
-  const result = await pool.query("INSERT INTO file(store_id, filename, user_id) VALUES($1, $2, $3) RETURNING id", [req.params.storeId, req.body.name, id])
+  const result = await pool.query("INSERT INTO file(store_id, filename, user_id, type) VALUES($1, $2, $3, $4) RETURNING id", [req.params.storeId, req.body.name, id, "Materials",])
   const workbook = XLSX.readFile(req.file!.path)
   const sheet = workbook.Sheets[workbook.SheetNames[0]]
   const data = XLSX.utils.sheet_to_json(sheet, {header: 1}) as any[][]
@@ -150,6 +150,7 @@ app.post("/encode/sales/:storeId", upload.single("sales"), async(req, res) => {
   const workbook = XLSX.readFile(req.file!.path)
   const sheet = workbook.Sheets[workbook.SheetNames[0]]
   const object = XLSX.utils.sheet_to_json(sheet, {header: 1}) as any[][]
+  const result = await pool.query("INSERT INTO file(store_id, filename, user_id, type) VALUES($1, $2, $3, $4) RETURNING id", [req.params.storeId, req.body.name, id, "Sales"])
   const completion = await groq.chat.completions.create({
     model: "openai/gpt-oss-20b",
     response_format: {type: "json_object"},
@@ -190,11 +191,12 @@ app.post("/encode/sales/:storeId", upload.single("sales"), async(req, res) => {
       total: total
     }
   })
-  res.json(sales)
+  res.json({sales: sales, id: result.rows[0].id})
 })
 
-app.post("/confirm/sales/:storeId", async(req, res) => {
+app.post("/confirm/sales/:storeId/:fileId", async(req, res) => {
   const sales = req.body.sales
+  await pool.query("UPDATE file SET status = $1 WHERE id = $2", ["Confirmed", req.params.fileId])
   for(const sale of sales){
     const jsTimestamp = (sale.sale_date - 25569) * 86400000
     const date = new Date(jsTimestamp) 
@@ -214,7 +216,7 @@ app.get("/store", async(req, res) => {
 
 app.get("/materials/:storeId", async(req, res) => {
   const result = await pool.query("SELECT materials.* FROM materials JOIN file on materials.file_id = file.id WHERE materials.store_id = $1 AND file.status = 'Pending'", [req.params.storeId])
-  const file = await pool.query("SELECT * FROM file WHERE store_id = $1 AND status = $2", [req.params.storeId, 'Pending'])
+  const file = await pool.query("SELECT * FROM file WHERE store_id = $1 AND status = $2 AND type = $3", [req.params.storeId, 'Pending', 'Materials'])
   res.json({materials: result.rows, file: file.rows})
 })
 

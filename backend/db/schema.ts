@@ -48,7 +48,8 @@ export const file = pgTable("file", {
     filename: text('filename'),
     upload_date: timestamp("upload_date", {withTimezone: true}).defaultNow().notNull(),
     status: text('status', {enum: ['Pending', 'Confirmed']}).default('Pending'),
-    user_id: uuid("user_id").references(() => users.id, {onDelete: "cascade"})
+    user_id: uuid("user_id").references(() => users.id, {onDelete: "cascade"}),
+    type: text("type", {enum: ["Materials", "Sales"]}).default("Materials")
 })
 
 export const usersRelations = relations(users, ({ many }) => ({
