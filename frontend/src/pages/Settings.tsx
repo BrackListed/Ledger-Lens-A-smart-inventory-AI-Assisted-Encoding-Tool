@@ -9,14 +9,34 @@ import {
     Trash2,
     Upload,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "../assets/Header";
+import { useAuth } from "@clerk/react";
+import axios from "axios";
 
 type SettingsTab = "set prices" | "thresholds" | "store management" | "cost sheet";
 
 export function Settings() {
+    interface storeType{
+        created_at: string
+        id: string
+        name: string
+        user_id: string
+    }
+    const {getToken} = useAuth()
     const [activeTab, setActiveTab] = useState<SettingsTab>("set prices");
-    
+    const [itemSku, setItemSku] = useState("")
+    const [presetPrice, setPresetPrice] = useState(0)
+    const [stores, setStores] = useState<storeType[]>([])
+    const [selectedStore, setSelectedStore] = useState<storeType | undefined>(undefined)
+    useEffect(() => {
+        const fetchStoresData = async() => {
+            const token = await getToken()
+            const result = await axios.get("http://localhost:5000/store", {headers: {Authorization: `Bearer ${token}`}})
+            setStores(result.data)
+        }
+        fetchStoresData()
+    }, [])
     return (
         <div className="relative min-h-screen overflow-hidden bg-[#050907] text-white">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_30%),radial-gradient(circle_at_top_right,rgba(22,101,52,0.18),transparent_26%),linear-gradient(to_bottom,rgba(255,255,255,0.03),transparent_28%)]" />
@@ -50,9 +70,7 @@ export function Settings() {
                             <div>
                                 <p className="text-xs uppercase tracking-[0.24em] text-white/35">Current store</p>
                                 <select className="mt-1 w-48 rounded-xl border border-white/10 bg-[#0b120f] px-3 py-2 text-sm font-medium text-white outline-none">
-                                    <option>T-Shirt Store</option>
-                                    <option>Warehouse East</option>
-                                    <option>Pop-up Market</option>
+                                    {stores.map((store) => (<option onClick={() => setSelectedStore(store)}>{store.name}</option>))}
                                 </select>
                             </div>
                         </div>
@@ -107,7 +125,6 @@ export function Settings() {
                                         <th className="px-4 py-3">SKU</th>
                                         <th className="px-4 py-3">Description</th>
                                         <th className="px-4 py-3">Unit Cost (Preset)</th>
-                                        <th className="px-4 py-3">Markup</th>
                                         <th className="px-4 py-3">Sell Price</th>
                                     </tr>
                                 </thead>
@@ -121,9 +138,6 @@ export function Settings() {
                                         </td>
                                         <td className="px-4 py-4 align-top">
                                             <input defaultValue="0.45" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
-                                        </td>
-                                        <td className="px-4 py-4 align-top">
-                                            <input defaultValue="35%" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
                                         </td>
                                         <td className="px-4 py-4 align-top">
                                             <input defaultValue="$0.61" readOnly className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
