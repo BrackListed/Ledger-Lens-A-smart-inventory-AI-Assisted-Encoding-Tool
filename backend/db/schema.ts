@@ -39,7 +39,8 @@ export const sales = pgTable("sales", {
     sale_price: numeric("sale_price"),
     total: numeric('total'),
     sale_date: timestamp("sale_date", {withTimezone: true}).defaultNow().notNull(),
-    sku: text('sku')
+    sku: text('sku'),
+    file_id: integer("file_id").references(() => file.id, {onDelete: "cascade"}),
 })
 
 export const file = pgTable("file", {
@@ -87,6 +88,10 @@ export const salesRelations = relations(sales, ({ one }) => ({
     material: one(materials, {
         fields: [sales.material_id],
         references: [materials.id]
+    }),
+    file: one(file, {
+        fields: [sales.file_id],
+        references: [file.id]
     })
 }))
 
@@ -99,5 +104,6 @@ export const fileRelations = relations(file, ({ one, many }) => ({
         fields: [file.user_id],
         references: [users.id]
     }),
-    materials: many(materials)
+    materials: many(materials),
+    sales: many(sales)
 }))

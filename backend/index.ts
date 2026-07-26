@@ -81,7 +81,7 @@ app.get("/store", async(req, res) => {
 
 app.post("/encode/:storeId", upload.single("file"), async(req, res) => {
   const {userId} = getAuth(req)
-  const pending = await pool.query("SELECT id FROM file WHERE store_id = $1 and status = 'Pending'", [req.params.storeId])
+  const pending = await pool.query("SELECT id FROM file WHERE store_id = $1 AND status = 'Pending' AND type = 'Materials'", [req.params.storeId])
   const fetch = await pool.query("SELECT id FROM users WHERE clerk_user_id = $1", [userId])
   const id = fetch.rows[0]?.id
   if(!id) return res.status(404).json({error: "User not found"})
@@ -145,8 +145,12 @@ app.post("/encode/:storeId", upload.single("file"), async(req, res) => {
 app.post("/encode/sales/:storeId", upload.single("sales"), async(req, res) => {
   const {userId} = getAuth(req)
   const fetch = await pool.query("SELECT id FROM users WHERE clerk_user_id = $1", [userId])
+  const pending = await pool.query("SELECT id FROM file WHERE store_id = $1 AND status = 'Pending' AND type = 'Sales'", [req.params.storeId])
   const id = fetch.rows[0]?.id
   if (!id) return res.status(404).json({ error: "User not found" })
+  if(pending.rows.length > 0) {
+    return res.json({message: "You have sales on pending. Verify them before adding a new one!", status: false})
+  }
   const workbook = XLSX.readFile(req.file!.path)
   const sheet = workbook.Sheets[workbook.SheetNames[0]]
   const object = XLSX.utils.sheet_to_json(sheet, {header: 1}) as any[][]
@@ -191,7 +195,7 @@ app.post("/encode/sales/:storeId", upload.single("sales"), async(req, res) => {
       total: total
     }
   })
-  res.json({sales: sales, id: result.rows[0].id})
+  res.json({sales: sales, id: result.rows[0].id, message: "Successfully encoded sales", status: true})
 })
 
 app.post("/confirm/sales/:storeId/:fileId", async(req, res) => {

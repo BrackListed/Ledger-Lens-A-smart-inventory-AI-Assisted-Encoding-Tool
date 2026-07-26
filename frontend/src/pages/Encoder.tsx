@@ -1,4 +1,4 @@
-import { CheckCircle2, AlertTriangle, FileText, Trash2 } from "lucide-react";
+import { CheckCircle2, AlertTriangle, FileText, Trash2, XIcon } from "lucide-react";
 import { Header } from "../assets/Header";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -66,6 +66,8 @@ export function Encoder(){
     const [forwardedToStore, setForwardedToStore] = useState(false)
     const [salesFileId, setSalesFileId] = useState(0)
     const [salesFileName, setSalesFileName] = useState("")
+    const [success, setSuccess] = useState<boolean | undefined>(undefined)
+    const [successMessage, setSuccessMessage] = useState("")
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -79,7 +81,7 @@ export function Encoder(){
         const fetchMaterialsData = async() => {
             const token = await getToken()
             const result = await axios.get(`http://localhost:5000/materials/${selectedStore?.id}`, {headers: {Authorization: `Bearer ${token}`}})
-            setFileName(result.data.file[0].filename)
+            setFileName(result.data.file?.[0]?.filename ?? "")
             setFile(result.data.file[0])
             setMaterials(result.data.materials)
         }
@@ -101,6 +103,14 @@ export function Encoder(){
             }, 1000);
         }
     }, [forwardedToStore])
+
+    useEffect(() => {
+        if(success){
+            setTimeout(() => {
+                setSuccess(undefined)
+            }, 1000);
+        }
+    }, [success])
     return(
         <div className="relative min-h-screen overflow-hidden bg-[#060a09] text-white">
             <Header/>
@@ -302,7 +312,7 @@ export function Encoder(){
                             </tr>
                         </thead>
                         <tbody>
-                            {sales.map((sale) => (<tr key={sale.id} className="border-t border-white/5">
+                            {sales?.map((sale) => (<tr key={sale.id} className="border-t border-white/5">
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.date ?? new Date().toLocaleDateString()}</td>
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.sku}</td>
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.quantity}</td>
@@ -330,6 +340,18 @@ export function Encoder(){
                         Sales forwarded to store successfully
                     </div>
                 )}
+                {success && (
+                    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-lg bg-emerald-400 px-4 py-3 text-sm font-medium text-emerald-950 shadow-xl">
+                        <CheckCircle2 className="h-4 w-4" />
+                        {successMessage}
+                    </div>
+                )}
+                {success === false && (
+                    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-lg bg-red-400 px-4 py-3 text-sm font-medium text-zinc-100 shadow-xl">
+                        <XIcon className="h-4 w-4" />
+                        {successMessage}
+                    </div>
+                )}
             </main>
 
         </div>
@@ -348,6 +370,8 @@ export function Encoder(){
         const result = await axios.post(`http://localhost:5000/encode/sales/${storeId}`, formData, {headers: {Authorization: `Bearer ${token}`}})
         setSales(result.data.sales)
         setSalesFileId(result.data.id)
+        setSuccess(result.data.status)
+        setSuccessMessage(result.data.message)
     }
 
     async function sendSales(sales: salesType[], storeId: string){
