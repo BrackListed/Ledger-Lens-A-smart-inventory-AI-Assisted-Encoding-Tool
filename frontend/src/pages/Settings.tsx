@@ -23,12 +23,47 @@ export function Settings() {
         name: string
         user_id: string
     }
+    interface materialType{
+        id: number
+        file_id: number
+        store_id: string
+        description: string
+        preset_price: number
+        profit_margin: number
+        purchased_at: string
+        quantity: number
+        sku: string
+        status: string
+        total_price: number
+        unit_price: number
+    }
+
+    interface fileType{
+        id: number
+        filename: string
+        status: string
+        store_id: string
+        upload_date: string
+        user_id: string
+    }
+
+    interface salesType{
+        id: string
+        date: string
+        sku: string
+        quantity: number
+        sale_price: number
+        total: number
+    }
     const {getToken} = useAuth()
     const [activeTab, setActiveTab] = useState<SettingsTab>("set prices");
     const [itemSku, setItemSku] = useState("")
     const [presetPrice, setPresetPrice] = useState(0)
     const [stores, setStores] = useState<storeType[]>([])
+    const [materials, setMaterials] = useState<materialType[]>([])
     const [selectedStore, setSelectedStore] = useState<storeType | undefined>(undefined)
+    const [files, setFiles] = useState<fileType[]>([])
+    const [sales, setSales] = useState<salesType[]>([])
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -37,6 +72,18 @@ export function Settings() {
         }
         fetchStoresData()
     }, [])
+
+    useEffect(() => {
+        if(!selectedStore) return 
+        const fetchMaterialData = async() => {
+            const token = await getToken()
+            const result = await axios.get(`http://localhost:5000/completed/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
+            setMaterials(result.data.materials)
+            setFiles(result.data.files)
+            setSales(result.data.sales)
+        }
+        fetchMaterialData()
+    }, [selectedStore])
     return (
         <div className="relative min-h-screen overflow-hidden bg-[#050907] text-white">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_30%),radial-gradient(circle_at_top_right,rgba(22,101,52,0.18),transparent_26%),linear-gradient(to_bottom,rgba(255,255,255,0.03),transparent_28%)]" />
@@ -69,8 +116,13 @@ export function Settings() {
                             </div>
                             <div>
                                 <p className="text-xs uppercase tracking-[0.24em] text-white/35">Current store</p>
-                                <select className="mt-1 w-48 rounded-xl border border-white/10 bg-[#0b120f] px-3 py-2 text-sm font-medium text-white outline-none">
-                                    {stores.map((store) => (<option onClick={() => setSelectedStore(store)}>{store.name}</option>))}
+                                <select
+                                    value={selectedStore?.id ?? ""}
+                                    onChange={(e) => setSelectedStore(stores.find((store) => store.id === e.target.value))}
+                                    className="mt-1 w-48 rounded-xl border border-white/10 bg-[#0b120f] px-3 py-2 text-sm font-medium text-white outline-none"
+                                >
+                                    <option value="" disabled>Select a store</option>
+                                    {stores.map((store) => (<option key={store.id} value={store.id}>{store.name}</option>))}
                                 </select>
                             </div>
                         </div>
@@ -129,20 +181,20 @@ export function Settings() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr className="border-b border-white/8">
+                                    {materials.map((material) => (<tr className="border-b border-white/8">
                                         <td className="px-4 py-4 align-top">
-                                            <input defaultValue="MAT-001" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
+                                            <input defaultValue={material.sku}className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
                                         </td>
                                         <td className="px-4 py-4 align-top">
-                                            <input defaultValue="Stainless Steel Bolts" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
+                                            <input defaultValue={material.description} className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
                                         </td>
                                         <td className="px-4 py-4 align-top">
-                                            <input defaultValue="0.45" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
+                                            <input defaultValue={material.preset_price ?? "No preset price"} className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
                                         </td>
                                         <td className="px-4 py-4 align-top">
-                                            <input defaultValue="$0.61" readOnly className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
+                                            <input defaultValue={(Number(material.preset_price * 1.30).toFixed(2))} readOnly className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
                                         </td>
-                                    </tr>
+                                    </tr>))}
                                 </tbody>
                             </table>
 
