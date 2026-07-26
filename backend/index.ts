@@ -196,8 +196,10 @@ app.post("/encode/sales/:storeId", upload.single("sales"), async(req, res) => {
 app.post("/confirm/sales/:storeId", async(req, res) => {
   const sales = req.body.sales
   for(const sale of sales){
+    const jsTimestamp = (sale.sale_date - 25569) * 86400000
+    const date = new Date(jsTimestamp) 
     await pool.query("UPDATE materials SET quantity = quantity - $1 WHERE store_id = $2 AND sku = $3", [Number(sale.quantity), req.params.storeId, sale.sku ])
-    await pool.query("INSERT INTO sales(id, store_id, sale_date, sku, quantity, sale_price, total) VALUES($1, $2, $3, $4, $5, $6, $7)", [sale.id, req.params.storeId, sale.date, sale.sku, sale.quantity, sale.sale_price, sale.total])
+    await pool.query("INSERT INTO sales(id, store_id, sale_date, sku, quantity, sale_price, total) VALUES($1, $2, $3, $4, $5, $6, $7)", [sale.id, req.params.storeId, date, sale.sku, sale.quantity, sale.sale_price, sale.total])
   }
   res.json(true)
 })
