@@ -38,8 +38,24 @@ export function Header(){
                         Stores
                     </span>
                 </Link>
-                <span className="text-white/50 transition hover:text-white">Anomaly Reports</span>
-                <span className="text-white/50 transition hover:text-white">Settings</span>
+                <Link to="/anomalyreports">
+                    <span className={
+                        location.pathname === "/anomalyreports"
+                            ? "relative text-white after:absolute after:-bottom-4 after:left-0 after:h-0.5 after:w-full after:bg-emerald-400"
+                            : "text-white/50 transition hover:text-white"
+                    }>
+                        Anomaly Reports
+                    </span>
+                </Link>
+                <Link to="/settings">
+                    <span className={
+                        location.pathname === "/settings"
+                            ? "relative text-white after:absolute after:-bottom-4 after:left-0 after:h-0.5 after:w-full after:bg-emerald-400"
+                            : "text-white/50 transition hover:text-white"
+                    }>
+                        Settings
+                    </span>
+                </Link>
             </nav>
 
             <UserButton

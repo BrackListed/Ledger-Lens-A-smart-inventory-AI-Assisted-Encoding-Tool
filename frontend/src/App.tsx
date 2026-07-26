@@ -4,6 +4,8 @@ import { Encoder } from "./pages/Encoder";
 import { ClerkProvider } from "@clerk/react";
 import { Intermission } from "./pages/Intermission";
 import { Stores } from "./pages/Stores";
+import { AnomalyReports } from "./pages/AnomalyReports";
+import { Settings } from "./pages/Settings";
 export default function App(){
   return(
     <BrowserRouter>
@@ -13,6 +15,8 @@ export default function App(){
         <Route path = "/encoder" element={<Encoder/>}/>
         <Route path = "/intermission" element={<Intermission/>}/>
         <Route path = "/stores" element={<Stores/>}/>
+        <Route path = "/anomalyreports" element={<AnomalyReports/>}/>
+        <Route path = "/settings" element={<Settings/>}/>
       </Routes>
     </ClerkProvider>
     </BrowserRouter>
