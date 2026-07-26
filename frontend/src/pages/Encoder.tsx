@@ -86,6 +86,14 @@ export function Encoder(){
             setMaterials(result.data.materials)
         }
         fetchMaterialsData()
+        const fetchSalesData = async() => {
+            if(!selectedStore) return 
+            const token = await getToken()
+            const result = await axios.get(`http://localhost:5000/sales/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
+            console.log(result.data)
+            setSales(result.data)
+        }
+        fetchSalesData()
     }, [selectedStore])
 
     useEffect(() => {
@@ -317,7 +325,7 @@ export function Encoder(){
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.sku}</td>
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.quantity}</td>
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.sale_price}</td>
-                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.total.toFixed(2)}</td>
+                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{Number(sale.total).toFixed(2)}</td>
                                 <td className="whitespace-nowrap px-4 py-2">
                                     <button onClick={() => setSales(prev => prev.filter(s => s.id !== sale.id))} className="text-white/40 hover:text-orange-400 hover:cursor-pointer">
                                         <Trash2 className="h-3.5 w-3.5" />
@@ -375,7 +383,6 @@ export function Encoder(){
     }
 
     async function sendSales(sales: salesType[], storeId: string){
-        console.log(sales)
         const result = await axios.post(`http://localhost:5000/confirm/sales/${storeId}/${salesFileId}`, {sales: sales})
         setForwardedToStore(result.data)
     }

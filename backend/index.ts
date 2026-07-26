@@ -195,18 +195,16 @@ app.post("/encode/sales/:storeId", upload.single("sales"), async(req, res) => {
       total: total
     }
   })
+  for(const sale of sales){
+    const date = typeof sale.sale_date === "number" ? new Date((sale.sale_date - 25569) * 86400000) : new Date(sale.sale_date)
+    await pool.query("UPDATE materials SET quantity = quantity - $1 WHERE store_id = $2 AND sku = $3", [Number(sale.quantity), req.params.storeId, sale.sku ])
+    await pool.query("INSERT INTO sales(id, store_id, sale_date, sku, quantity, sale_price, total, file_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8)", [sale.id, req.params.storeId, date, sale.sku, sale.quantity, sale.sale_price, sale.total, result.rows[0].id])
+  }
   res.json({sales: sales, id: result.rows[0].id, message: "Successfully encoded sales", status: true})
 })
 
 app.post("/confirm/sales/:storeId/:fileId", async(req, res) => {
-  const sales = req.body.sales
   await pool.query("UPDATE file SET status = $1 WHERE id = $2", ["Confirmed", req.params.fileId])
-  for(const sale of sales){
-    const jsTimestamp = (sale.sale_date - 25569) * 86400000
-    const date = new Date(jsTimestamp) 
-    await pool.query("UPDATE materials SET quantity = quantity - $1 WHERE store_id = $2 AND sku = $3", [Number(sale.quantity), req.params.storeId, sale.sku ])
-    await pool.query("INSERT INTO sales(id, store_id, sale_date, sku, quantity, sale_price, total) VALUES($1, $2, $3, $4, $5, $6, $7)", [sale.id, req.params.storeId, date, sale.sku, sale.quantity, sale.sale_price, sale.total])
-  }
   res.json(true)
 })
 
@@ -231,9 +229,11 @@ app.get("/completed/:storeId", async(req, res) => {
 })
 
 app.get("/sales/:storeId", async(req, res) => {
-  const sales = await pool.query("SELECT * FROM sales WHERE store_id = $1", [req.params.storeId])
+  const sales = await pool.query("SELECT sales.* FROM sales JOIN file ON sales.file_id = file.id WHERE sales.store_id = $1 AND file.status = 'Pending'", [req.params.storeId])
   res.json(sales.rows)
 })
+
+
 
 app.patch("/confirm/:fileId", async(req, res) => {
   await pool.query("UPDATE file SET status = $1 WHERE id = $2", ['Confirmed', req.params.fileId])
