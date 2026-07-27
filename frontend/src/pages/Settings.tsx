@@ -51,14 +51,6 @@ export function Settings() {
         user_id: string
     }
 
-    interface salesType{
-        id: string
-        date: string
-        sku: string
-        quantity: number
-        sale_price: number
-        total: number
-    }
     const {getToken} = useAuth()
     const [activeTab, setActiveTab] = useState<SettingsTab>("set prices");
     const [itemSku, setItemSku] = useState("")
@@ -69,7 +61,6 @@ export function Settings() {
     const [selectedStore, setSelectedStore] = useState<storeType | undefined>(undefined)
     const [materialFiles, setMaterialFiles] = useState<fileType[]>([])
     const [selectedFile, setSelectedFile] = useState<fileType | undefined>(undefined)
-    const [sales, setSales] = useState<salesType[]>([])
     const filteredMaterials: materialType[] = selectedFile ? materials.filter((m) => m.file_id === selectedFile.id) : materials
     const [success, setSuccess] = useState(false)
     const [successMessage, setSuccessMessage] = useState("")
@@ -90,7 +81,6 @@ export function Settings() {
             const result = await axios.get(`http://localhost:5000/completed/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
             setMaterials(result.data.materials)
             setMaterialFiles(result.data.materialFiles)
-            setSales(result.data.sales)
             setSelectedFile(undefined)
         }
         fetchMaterialData()

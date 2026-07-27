@@ -7,14 +7,81 @@ import {
     ShieldAlert,
     Sparkles,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Header } from "../assets/Header";
+import axios from "axios";
+import { useAuth } from "@clerk/react";
 
 type ReportTab = "all" | "price spike" | "margin loss" | "stock mismatch";
 
 export function AnomalyReports() {
-    const [activeTab, setActiveTab] = useState<ReportTab>("all");
+    interface storeType{
+        created_at: string
+        id: string
+        name: string
+        user_id: string
+        price_spike: number
+        margin_floor: number
+        mismatch: number
+    }
+    interface materialType{
+        id: number
+        file_id: number
+        store_id: string
+        description: string
+        preset_price: number
+        profit_margin: number
+        purchased_at: string
+        quantity: number
+        sku: string
+        status: string
+        total_price: number
+        unit_price: number
+    }
 
+    interface fileType{
+        id: number
+        filename: string
+        status: string
+        store_id: string
+        upload_date: string
+        user_id: string
+    }
+
+    interface salesType{
+        id: string
+        date: string
+        sku: string
+        quantity: number
+        sale_price: number
+        total: number
+    }
+    const {getToken} = useAuth()
+    const [activeTab, setActiveTab] = useState<ReportTab>("all");
+    const [stores, setStores] = useState<storeType[]>([])
+    const [selectedStore, setSelectedStore] = useState<storeType | undefined>(undefined)
+    const [materials, setMaterials] = useState<materialType[]>([])
+    const [sales, setSales] = useState<salesType[]>([])
+    const [storeDropdownOpen, setStoreDropdownOpen] = useState(false)
+    const storeDropdownRef = useRef<HTMLDivElement>(null)
+    useEffect(() => {
+        const fetchStoresData = async() => {
+            const token = await getToken()
+            const result = await axios.get("http://localhost:5000/store", {headers: {Authorization: `Bearer ${token}`}})
+            setStores(result.data)
+            setSelectedStore(result.data[0])
+        }
+        fetchStoresData()
+    }, [])
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if(storeDropdownRef.current && !storeDropdownRef.current.contains(e.target as Node)){
+                setStoreDropdownOpen(false)
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside)
+        return () => document.removeEventListener("mousedown", handleClickOutside)
+    }, [])
     return (
         <div className="relative min-h-screen overflow-hidden bg-[#050907] text-white">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_30%),radial-gradient(circle_at_top_right,rgba(22,101,52,0.18),transparent_26%),linear-gradient(to_bottom,rgba(255,255,255,0.03),transparent_28%)]" />
@@ -38,16 +105,42 @@ export function AnomalyReports() {
                             </p>
                         </div>
 
-                        <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#0b120f] px-4 py-3 shadow-lg">
+                        <div ref={storeDropdownRef} className="relative flex items-center gap-3 rounded-2xl border border-white/10 bg-[#0b120f] px-4 py-3 shadow-lg">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-300">
                                 <BarChart3 className="h-5 w-5" />
                             </div>
                             <div>
                                 <p className="text-xs uppercase tracking-[0.24em] text-white/35">Store</p>
-                                <div className="mt-1 flex items-center gap-2 text-sm font-medium text-white">
-                                    T-Shirt Store
-                                    <ChevronDown className="h-4 w-4 text-white/40" />
-                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setStoreDropdownOpen((open) => !open)}
+                                    className="mt-1 flex items-center gap-2 text-sm font-medium text-white outline-none"
+                                >
+                                    {selectedStore?.name ?? "Select store"}
+                                    <ChevronDown className={storeDropdownOpen ? "h-4 w-4 text-white/40 rotate-180 transition-transform" : "h-4 w-4 text-white/40 transition-transform"} />
+                                </button>
+
+                                {storeDropdownOpen && (
+                                    <div className="absolute right-0 top-full z-20 mt-2 w-56 overflow-hidden rounded-2xl border border-white/10 bg-[#0b120f] p-1.5 shadow-xl">
+                                        {stores.length === 0 && (
+                                            <p className="px-3 py-2 text-sm text-white/40">No stores found</p>
+                                        )}
+                                        {stores.map((store) => (
+                                            <button
+                                                key={store.id}
+                                                type="button"
+                                                onClick={() => {setSelectedStore(store); setStoreDropdownOpen(false)}}
+                                                className={
+                                                    selectedStore?.id === store.id
+                                                        ? "w-full rounded-xl bg-emerald-400/10 px-3 py-2 text-left text-sm font-medium text-emerald-300 transition"
+                                                        : "w-full rounded-xl px-3 py-2 text-left text-sm text-white/75 transition hover:bg-white/5 hover:text-white"
+                                                }
+                                            >
+                                                {store.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
