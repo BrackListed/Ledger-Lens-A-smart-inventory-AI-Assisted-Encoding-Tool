@@ -65,7 +65,7 @@ export function Settings() {
     const [materialFiles, setMaterialFiles] = useState<fileType[]>([])
     const [selectedFile, setSelectedFile] = useState<fileType | undefined>(undefined)
     const [sales, setSales] = useState<salesType[]>([])
-    const filteredMaterials = selectedFile ? materials.filter((m) => m.file_id === selectedFile.id) : materials
+    const filteredMaterials: materialType[] = selectedFile ? materials.filter((m) => m.file_id === selectedFile.id) : []
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -83,7 +83,6 @@ export function Settings() {
             const result = await axios.get(`http://localhost:5000/completed/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
             setMaterials(result.data.materials)
             setMaterialFiles(result.data.materialFiles)
-            console.log(result.data.materialFiles)
             setSales(result.data.sales)
             setSelectedFile(undefined)
         }
@@ -181,9 +180,9 @@ export function Settings() {
                                 <select
                                     value={selectedFile?.id ?? ""}
                                     className="w-64 rounded-xl border border-white/10 bg-[#0b120f] px-3 py-2 text-sm font-medium text-white outline-none"
-                                    onChange={(e) => setSelectedFile(materialFiles.find((file) => file.id === Number(e.target.value)))}
+                                    onChange={(e) => {setSelectedFile(materialFiles.find((file) => file.id === Number(e.target.value)))}}
                                 >
-                                    <option value="" onClick={() => setSelectedFile(undefined)}>All files</option>
+                                    <option value="">All files</option>
                                     {materialFiles.map((file) => (<option key={file.id} value={file.id}>{file.filename}</option>))}
                                 </select>
                             </div>
