@@ -250,7 +250,7 @@ app.patch("/update/material/:materialId", async(req, res) => {
     const preset = req.body.price
     const material = await pool.query("SELECT unit_price FROM materials WHERE id = $1", [req.params.materialId])
     const unit = material.rows[0].unit_price
-    const profitMargin = ((Number(preset) - Number(unit)) / Number(preset)) * 100;
+    const profitMargin = ((Number(unit) - Number(preset)) / Number(unit)) * 100;
     await pool.query("UPDATE materials SET preset_price = $1 WHERE id = $2", [req.body.price, req.params.materialId])
     await pool.query("UPDATE materials SET profit_margin = $1 WHERE id = $2", [profitMargin, req.params.materialId])
     res.json({message: "Price updated successfully!", status: true})
