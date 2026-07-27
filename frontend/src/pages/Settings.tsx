@@ -23,6 +23,9 @@ export function Settings() {
         id: string
         name: string
         user_id: string
+        price_spike: number
+        margin_floor: number
+        mismatch: number
     }
     interface materialType{
         id: number
@@ -69,10 +72,7 @@ export function Settings() {
     const [sales, setSales] = useState<salesType[]>([])
     const filteredMaterials: materialType[] = selectedFile ? materials.filter((m) => m.file_id === selectedFile.id) : materials
     const [success, setSuccess] = useState(false)
-    const [successMessage, setSuccessMessage] = useState("") 
-    const [priceSpike, setPriceSpike] = useState(0)
-    const [marginFloor, setMarginFloor] = useState(0)
-    const [mismatchVariance, setMismatchVariance] = useState(0)
+    const [successMessage, setSuccessMessage] = useState("")
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -94,20 +94,18 @@ export function Settings() {
             setSelectedFile(undefined)
         }
         fetchMaterialData()
-    }, [selectedStore])
+    }, [selectedStore?.id])
 
     useEffect(() => {
         if(!selectedStore) return 
-        const fetchMaterialData = async() => {
+        const fetchStoresData = async() => {
             const token = await getToken()
-            const result = await axios.get(`http://localhost:5000/completed/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
-            setMaterials(result.data.materials)
-            setMaterialFiles(result.data.materialFiles)
-            setSales(result.data.sales)
-            setSelectedFile(undefined)
+            const result = await axios.get("http://localhost:5000/store", {headers: {Authorization: `Bearer ${token}`}})
+            setStores(result.data)
+            setSelectedStore(result.data.find((s: storeType) => s.id === selectedStore?.id) ?? result.data[0])
         }
         if(success){
-            fetchMaterialData()
+            fetchStoresData()
             setTimeout(() => {
                 setSuccess(false)
             }, 1000);
@@ -273,11 +271,13 @@ export function Settings() {
                                         <td className="px-4 py-4">
                                             <div className="relative">
                                                 <input
-                                                    onChange={(e) => {setPriceSpike(Number(e.target.value)); {if(!selectedStore){return }updateAnomalyThresholds(selectedStore?.id, Number(e.target.value), marginFloor, mismatchVariance)}}}
+                                                    key={`spike-${selectedStore?.id}`}
+                                                    onBlur={(e) => {if(!selectedStore){return }updateAnomalyThresholds(selectedStore.id, {spike: Number(e.target.value)})}}
+                                                    onKeyDown={(e) => {if(e.key === "Enter"){e.currentTarget.blur()}}}
                                                     type="number"
                                                     min="0"
                                                     step="0.1"
-                                                    defaultValue="18"
+                                                    defaultValue={selectedStore?.price_spike}
                                                     className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 pr-9 text-sm text-white outline-none"
                                                 />
                                                 <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-white/35">%</span>
@@ -292,11 +292,13 @@ export function Settings() {
                                         <td className="px-4 py-4">
                                             <div className="relative">
                                                 <input
-                                                    onChange={(e) => {setMarginFloor(Number(e.target.value)); {if(!selectedStore){return }updateAnomalyThresholds(selectedStore?.id, priceSpike, Number(e.target.value), mismatchVariance)}}}
+                                                    key={`floor-${selectedStore?.id}`}
+                                                    onBlur={(e) => {if(!selectedStore){return }updateAnomalyThresholds(selectedStore.id, {floor: Number(e.target.value)})}}
+                                                    onKeyDown={(e) => {if(e.key === "Enter"){e.currentTarget.blur()}}}
                                                     type="number"
                                                     min="0"
                                                     step="0.1"
-                                                    defaultValue="12"
+                                                    defaultValue={selectedStore?.margin_floor}
                                                     className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 pr-9 text-sm text-white outline-none"
                                                 />
                                                 <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-white/35">%</span>
@@ -311,9 +313,11 @@ export function Settings() {
                                         <td className="px-4 py-4">
                                             <div className="relative">
                                                 <input
-                                                    onChange={(e) => {setMismatchVariance(Number(e.target.value)); {if(!selectedStore){return }updateAnomalyThresholds(selectedStore?.id, priceSpike, marginFloor, Number(e.target.value))}}}
+                                                    key={`mismatch-${selectedStore?.id}`}
+                                                    onBlur={(e) => {if(!selectedStore){return }updateAnomalyThresholds(selectedStore.id, {mismatch: Number(e.target.value)})}}
+                                                    onKeyDown={(e) => {if(e.key === "Enter"){e.currentTarget.blur()}}}
                                                     type="number"
-                                                    defaultValue="3"
+                                                    defaultValue={selectedStore?.mismatch}
                                                     className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 px-3 py-2 pr-9 text-sm text-white outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                                 />
                                                 <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-white/35">units</span>
@@ -483,20 +487,10 @@ export function Settings() {
         }
     }
     
-    async function updateAnomalyThresholds(storeId: string, priceSpike: number, marginFloor: number, mismatchVariance: number){
+    async function updateAnomalyThresholds(storeId: string, thresholds: {spike?: number, floor?: number, mismatch?: number}){
         const token = await getToken()
-        if(priceSpike){
-            const result = await axios.patch(`http://localhost:5000/set/thresholds/${storeId}`, {spike: priceSpike}, {headers: {Authorization: `Bearer ${token}`}})
-            setSuccess(result.data.status)
-            setSuccessMessage(result.data.message)
-        } else if(marginFloor){
-            const result = await axios.patch(`http://localhost:5000/set/thresholds/${storeId}`, {floor: marginFloor}, {headers: {Authorization: `Bearer ${token}`}})
-            setSuccess(result.data.status)
-            setSuccessMessage(result.data.message)
-        } else if(mismatchVariance){
-            const result = await axios.patch(`http://localhost:5000/set/thresholds/${storeId}`, {mismatch: mismatchVariance}, {headers: {Authorization: `Bearer ${token}`}})
-            setSuccess(result.data.status)
-            setSuccessMessage(result.data.message)
-        }
+        const result = await axios.patch(`http://localhost:5000/set/thresholds/${storeId}`, thresholds, {headers: {Authorization: `Bearer ${token}`}})
+        setSuccess(result.data.status)
+        setSuccessMessage(result.data.message)
     }
 }
