@@ -65,7 +65,7 @@ export function Settings() {
     const [materialFiles, setMaterialFiles] = useState<fileType[]>([])
     const [selectedFile, setSelectedFile] = useState<fileType | undefined>(undefined)
     const [sales, setSales] = useState<salesType[]>([])
-    const filteredMaterials: materialType[] = selectedFile ? materials.filter((m) => m.file_id === selectedFile.id) : []
+    const filteredMaterials: materialType[] = selectedFile ? materials.filter((m) => m.file_id === selectedFile.id) : materials
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -197,7 +197,7 @@ export function Settings() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredMaterials.map((material) => (<tr className="border-b border-white/8">
+                                    {filteredMaterials.map((material) => (<tr key={material.id} className="border-b border-white/8">
                                         <td className="px-4 py-4 align-top">
                                             <input defaultValue={material.sku}className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
                                         </td>
