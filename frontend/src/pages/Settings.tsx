@@ -70,6 +70,9 @@ export function Settings() {
     const filteredMaterials: materialType[] = selectedFile ? materials.filter((m) => m.file_id === selectedFile.id) : materials
     const [success, setSuccess] = useState(false)
     const [successMessage, setSuccessMessage] = useState("") 
+    const [priceSpike, setPriceSpike] = useState(0)
+    const [marginFloor, setMarginFloor] = useState(0)
+    const [mismatchVariance, setMismatchVariance] = useState(0)
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -94,7 +97,17 @@ export function Settings() {
     }, [selectedStore])
 
     useEffect(() => {
+        if(!selectedStore) return 
+        const fetchMaterialData = async() => {
+            const token = await getToken()
+            const result = await axios.get(`http://localhost:5000/completed/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
+            setMaterials(result.data.materials)
+            setMaterialFiles(result.data.materialFiles)
+            setSales(result.data.sales)
+            setSelectedFile(undefined)
+        }
         if(success){
+            fetchMaterialData()
             setTimeout(() => {
                 setSuccess(false)
             }, 1000);
@@ -220,7 +233,7 @@ export function Settings() {
                                             <input onChange={(e) => {setPresetPrice(Number(e.target.value)); updateMaterial(material.id, Number(e.target.value), itemSku, itemDescription)}} defaultValue={material.preset_price ?? "No preset price"} className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
                                         </td>
                                         <td className="px-4 py-4 align-top">
-                                            <input defaultValue={(Number(material.preset_price * 1.30).toFixed(2))} readOnly className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
+                                            <input value={(material.preset_price * 1.30).toFixed(2)} readOnly className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
                                         </td>
                                     </tr>))}
                                 </tbody>
@@ -258,37 +271,56 @@ export function Settings() {
                                     <tr className="border-b border-white/8">
                                         <td className="px-4 py-4 text-sm font-medium text-white">Price jump spike</td>
                                         <td className="px-4 py-4">
-                                            <input defaultValue="18%" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
+                                            <div className="relative">
+                                                <input
+                                                    onChange={(e) => {setPriceSpike(Number(e.target.value)); {if(!selectedStore){return }updateAnomalyThresholds(selectedStore?.id, Number(e.target.value), marginFloor, mismatchVariance)}}}
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.1"
+                                                    defaultValue="18"
+                                                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 pr-9 text-sm text-white outline-none"
+                                                />
+                                                <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-white/35">%</span>
+                                            </div>
                                         </td>
                                         <td className="px-4 py-4">
-                                            <input defaultValue="Flag when invoice price rises above the threshold" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
+                                            <input readOnly defaultValue="Flag when invoice price rises above the threshold" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
                                         </td>
                                     </tr>
                                     <tr className="border-b border-white/8">
                                         <td className="px-4 py-4 text-sm font-medium text-white">Margin loss floor</td>
                                         <td className="px-4 py-4">
-                                            <input defaultValue="12%" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
+                                            <div className="relative">
+                                                <input
+                                                    onChange={(e) => {setMarginFloor(Number(e.target.value)); {if(!selectedStore){return }updateAnomalyThresholds(selectedStore?.id, priceSpike, Number(e.target.value), mismatchVariance)}}}
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.1"
+                                                    defaultValue="12"
+                                                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 pr-9 text-sm text-white outline-none"
+                                                />
+                                                <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-white/35">%</span>
+                                            </div>
                                         </td>
                                         <td className="px-4 py-4">
-                                            <input defaultValue="Review sales below target margin" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
+                                            <input readOnly defaultValue="Review sales below target margin" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
                                         </td>
                                     </tr>
                                     <tr className="border-b border-white/8">
                                         <td className="px-4 py-4 text-sm font-medium text-white">Stock mismatch variance</td>
                                         <td className="px-4 py-4">
-                                            <input defaultValue="3 units" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
+                                            <div className="relative">
+                                                <input
+                                                    onChange={(e) => {setMismatchVariance(Number(e.target.value)); {if(!selectedStore){return }updateAnomalyThresholds(selectedStore?.id, priceSpike, marginFloor, Number(e.target.value))}}}
+                                                    type="number"
+                                                    defaultValue="3"
+                                                    className="w-full appearance-none rounded-xl border border-white/10 bg-white/5 px-3 py-2 pr-9 text-sm text-white outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                                />
+                                                <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-white/35">units</span>
+                                            </div>
                                         </td>
                                         <td className="px-4 py-4">
-                                            <input defaultValue="Flag when sold quantity exceeds stock" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td className="px-4 py-4 text-sm font-medium text-white">Tolerance window</td>
-                                        <td className="px-4 py-4">
-                                            <input defaultValue="24h" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
-                                        </td>
-                                        <td className="px-4 py-4">
-                                            <input defaultValue="Time between updates" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
+                                            <input readOnly defaultValue="Flag when sold quantity exceeds stock" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
                                         </td>
                                     </tr>
                                 </tbody>
@@ -437,6 +469,7 @@ export function Settings() {
         const token = getToken()
         if(price){
             const result = await axios.patch(`http://localhost:5000/update/material/${materialId}`, {price: price}, {headers: {Authorization: `Bearer ${token}`}})
+            setMaterials((currentMaterials) => currentMaterials.map((material) => material.id === materialId ? {...material, preset_price: price} : material))
             setSuccess(result.data.status)
             setSuccessMessage(result.data.message)
         } else if(sku){
@@ -445,6 +478,23 @@ export function Settings() {
             setSuccessMessage(result.data.message)
         } else if(description){
             const result = await axios.patch(`http://localhost:5000/update/material/${materialId}`, {description: description}, {headers: {Authorization: `Bearer ${token}`}})
+            setSuccess(result.data.status)
+            setSuccessMessage(result.data.message)
+        }
+    }
+    
+    async function updateAnomalyThresholds(storeId: string, priceSpike: number, marginFloor: number, mismatchVariance: number){
+        const token = await getToken()
+        if(priceSpike){
+            const result = await axios.patch(`http://localhost:5000/set/thresholds/${storeId}`, {spike: priceSpike}, {headers: {Authorization: `Bearer ${token}`}})
+            setSuccess(result.data.status)
+            setSuccessMessage(result.data.message)
+        } else if(marginFloor){
+            const result = await axios.patch(`http://localhost:5000/set/thresholds/${storeId}`, {floor: marginFloor}, {headers: {Authorization: `Bearer ${token}`}})
+            setSuccess(result.data.status)
+            setSuccessMessage(result.data.message)
+        } else if(mismatchVariance){
+            const result = await axios.patch(`http://localhost:5000/set/thresholds/${storeId}`, {mismatch: mismatchVariance}, {headers: {Authorization: `Bearer ${token}`}})
             setSuccess(result.data.status)
             setSuccessMessage(result.data.message)
         }

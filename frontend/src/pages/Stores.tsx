@@ -153,7 +153,7 @@ export function Stores(){
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.unit_price}</td>
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.preset_price}</td>
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.total_price}</td>
-                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.profit_margin}%</td>
+                                                <td className="whitespace-nowrap px-4 py-2 text-white/70">{Number(material.profit_margin).toFixed(2)}%</td>
                                                 <td className="whitespace-nowrap px-4 py-2">
                                                     <button onClick={() => deleteMaterial(material.id, selectedStore!.id)} className="text-white/40 hover:text-orange-400 hover:cursor-pointer">
                                                         <Trash2 className="h-3.5 w-3.5" />

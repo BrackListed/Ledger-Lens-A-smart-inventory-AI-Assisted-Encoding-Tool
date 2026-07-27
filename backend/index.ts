@@ -263,6 +263,20 @@ app.patch("/update/material/:materialId", async(req, res) => {
   }
 })
 
+app.patch("/set/thresholds/:storeId", async(req, res) => {
+  if(req.body.spike){
+    await pool.query("UPDATE stores SET price_spike = $1 WHERE id = $2", [req.body.spike, req.params.storeId])
+    res.json({message: "Price jump spike successfully set!", status: true})
+  } else if(req.body.floor){
+    await pool.query("UPDATE stores SET margin_floor = $1 WHERE id = $2", [req.body.floor, req.params.storeId])
+    res.json({message: "Margin loss floor successfully set!", status: true})
+  }else if(req.body.mismatch){
+    await pool.query("UPDATE stores SET mismatch = $1 WHERE id = $2", [req.body.mismatch, req.params.storeId])
+    res.json({message: "Mismatch Variance successfully set!", status: true})
+  }
+})
+
+
 app.delete("/delete/materials/:materialId/:storeId", async(req, res) => {
   await pool.query("DELETE FROM materials WHERE id = $1 AND store_id = $2", [req.params.materialId, req.params.storeId])
   res.json(true)
@@ -272,6 +286,7 @@ app.delete("/delete/file/:fileId/:storeId", async(req, res) => {
   await pool.query("DELETE FROM file WHERE id = $1 and store_id = $2", [req.params.fileId, req.params.storeId])
   res.json(true)
 })
+
 
 
 

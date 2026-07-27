@@ -13,7 +13,10 @@ export const stores = pgTable("stores", {
     id: uuid("id").defaultRandom().primaryKey(),
     name: text('name'),
     created_at: timestamp("created_at", {withTimezone: true}).defaultNow().notNull(),
-    user_id: uuid("user_id").references(() => users.id, {onDelete: "cascade"})
+    user_id: uuid("user_id").references(() => users.id, {onDelete: "cascade"}),
+    price_spike: numeric("price_spike").default("20"),
+    margin_floor: numeric("margin_floor").default("10"),
+    mismatch: integer("mismatch").default(1),
 })
 
 export const materials = pgTable("materials", {
