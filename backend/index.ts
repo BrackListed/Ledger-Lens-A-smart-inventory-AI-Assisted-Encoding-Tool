@@ -225,7 +225,7 @@ app.get("/materials/:storeId", async(req, res) => {
 
 app.get("/completed/:storeId", async(req, res) => {
   const materialFiles = await pool.query("SELECT * FROM file WHERE store_id = $1 AND status = $2 AND type = $3", [req.params.storeId, 'Confirmed', 'Materials'])
-  const saleFiles = await pool.query("SELECT * FROM file WHERE store_id = $1 AND status = $2 AND type = $3", [req.params.storeId, 'Confirmed', 'Materials'])
+  const saleFiles = await pool.query("SELECT * FROM file WHERE store_id = $1 AND status = $2 AND type = $3", [req.params.storeId, 'Confirmed', 'Sales'])
   const materials = await pool.query("SELECT materials.* FROM materials JOIN file ON materials.file_id = file.id WHERE materials.store_id = $1 AND file.status = 'Confirmed'", [req.params.storeId])
   const sales = await pool.query("SELECT sales.* FROM sales JOIN file ON sales.file_id = file.id WHERE sales.store_id = $1 AND file.status = 'Confirmed'", [req.params.storeId])
   res.json({materials: materials.rows, materialFiles: materialFiles.rows, saleFiles: saleFiles.rows, sales: sales.rows})
@@ -236,6 +236,11 @@ app.get("/sales/:storeId", async(req, res) => {
   const sales = await pool.query("SELECT sales.* FROM sales JOIN file ON sales.file_id = file.id WHERE sales.store_id = $1 AND file.status = 'Pending'", [req.params.storeId])
   const file = await pool.query("SELECT * FROM file WHERE store_id = $1 AND status = $2 AND type = $3", [req.params.storeId, 'Pending', 'Sales'])
   res.json({sales: sales.rows, file: file.rows})
+})
+
+app.get("/flagged/pricespike/:storeId", async(req, res) => {
+  const materials = await pool.query("SELECT materials.* FROM materials JOIN stores ON materials.store_id = store.id WHERE materials.store_id = $1 AND materials.unit_price > (SELECT AVG(unit_price) FROM materials AS history WHERE materials.sku = history.sku AND history.store_id = $1)", [req.params.storeId])
+  res.json(materials.rows)
 })
 
 
@@ -250,7 +255,7 @@ app.patch("/update/material/:materialId", async(req, res) => {
     const preset = req.body.price
     const material = await pool.query("SELECT unit_price FROM materials WHERE id = $1", [req.params.materialId])
     const unit = material.rows[0].unit_price
-    const profitMargin = ((Number(unit) - Number(preset)) / Number(unit)) * 100;
+    const profitMargin = ((Number(preset) - Number(unit)) / Number(preset)) * 100
     await pool.query("UPDATE materials SET preset_price = $1 WHERE id = $2", [req.body.price, req.params.materialId])
     await pool.query("UPDATE materials SET profit_margin = $1 WHERE id = $2", [profitMargin, req.params.materialId])
     res.json({message: "Price updated successfully!", status: true})

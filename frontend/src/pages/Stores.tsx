@@ -54,7 +54,8 @@ export function Stores(){
     const [deletedMaterial, setDeletedMaterial] = useState(false)
     const [deletedFile, setDeletedFile] = useState(false)
     const [sales, setSales] = useState<salesType[]>([])
-
+    const [salesFiles, setSalesFiles] = useState<fileType[]>([])
+    const [fileTab, setFileTab] = useState<"material" | "sales">("material")
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -69,7 +70,8 @@ export function Stores(){
             const token = await getToken()
             const result = await axios.get(`http://localhost:5000/completed/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
             setMaterials(result.data.materials)
-            setFiles(result.data.files)
+            setFiles(result.data.materialFiles)
+            setSalesFiles(result.data.saleFiles)
             setSales(result.data.sales)
         }
         fetchMaterialData()
@@ -197,8 +199,26 @@ export function Stores(){
 
                     <div className="min-w-0 rounded-xl border border-white/10 bg-white/3 p-4">
                         <p className="truncate text-sm font-semibold text-white/90">Selected File: {selectedFile?.filename}</p>
+
+                        <div className="mt-3 flex items-center gap-2 rounded-lg border border-white/10 bg-black/20 p-1">
+                            <button
+                                type="button"
+                                onClick={() => setFileTab("material")}
+                                className={fileTab === "material" ? "flex-1 rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-[#05110b] transition" : "flex-1 rounded-md px-3 py-1.5 text-xs font-medium text-white/60 transition hover:text-white"}
+                            >
+                                Material
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setFileTab("sales")}
+                                className={fileTab === "sales" ? "flex-1 rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-[#05110b] transition" : "flex-1 rounded-md px-3 py-1.5 text-xs font-medium text-white/60 transition hover:text-white"}
+                            >
+                                Sales
+                            </button>
+                        </div>
+
                         <div className="mt-3 space-y-2">
-                            {files?.map((file) => (
+                            {(fileTab === "material" ? files : salesFiles)?.map((file) => (
                                 <div
                                     key={file.id}
                                     onClick={() => setSelectedFile(selectedFile?.id === file.id ? undefined : file)}
