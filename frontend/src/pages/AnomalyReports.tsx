@@ -268,12 +268,12 @@ export function AnomalyReports() {
                                                     </div>
 
                                                     <div className="inline-flex w-fit items-center rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-sm font-semibold text-rose-300">
-                                                        +{Math.round(((material.unit_price - material.preset_price) / material.preset_price) * 100)}%
+                                                        +{Math.round(((Number(material.unit_price) - Number(material.preset_price)) / Number(material.preset_price)) * 100)}%
                                                     </div>
                                                 </div>
 
                                                 <div className="mt-4 border-t border-white/8 pt-4 text-sm leading-relaxed text-white/70">
-                                                    Usually ${material.preset_price.toFixed(2)} · this invoice ${material.unit_price.toFixed(2)} · {material.quantity} units · ${(material.total_price - material.preset_price * material.quantity).toFixed(2)} above expected
+                                                    Usually ${Number(material.preset_price).toFixed(2)} · this invoice ${Number(material.unit_price).toFixed(2)} · {material.quantity} units · ${(Number(material.total_price) - Number(material.preset_price) * Number(material.quantity)).toFixed(2)} above expected
                                                 </div>
                                             </div>
                                         ))}

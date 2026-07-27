@@ -239,7 +239,7 @@ app.get("/sales/:storeId", async(req, res) => {
 })
 
 app.get("/flagged/pricespike/:storeId", async(req, res) => {
-  const materials = await pool.query("SELECT materials.* FROM materials JOIN stores ON materials.store_id = store.id WHERE materials.store_id = $1 AND materials.unit_price > (SELECT AVG(unit_price) FROM materials AS history WHERE materials.sku = history.sku AND history.store_id = $1)", [req.params.storeId])
+  const materials = await pool.query("SELECT materials.* FROM materials JOIN stores ON materials.store_id = stores.id WHERE materials.store_id = $1 AND materials.unit_price > materials.preset_price * (1 + stores.price_spike / 100)", [req.params.storeId])
   res.json(materials.rows)
 })
 
@@ -255,7 +255,7 @@ app.patch("/update/material/:materialId", async(req, res) => {
     const preset = req.body.price
     const material = await pool.query("SELECT unit_price FROM materials WHERE id = $1", [req.params.materialId])
     const unit = material.rows[0].unit_price
-    const profitMargin = ((Number(preset) - Number(unit)) / Number(preset)) * 100
+    const profitMargin = ((Number(unit) - Number(preset)) / Number(preset)) * 100
     await pool.query("UPDATE materials SET preset_price = $1 WHERE id = $2", [req.body.price, req.params.materialId])
     await pool.query("UPDATE materials SET profit_margin = $1 WHERE id = $2", [profitMargin, req.params.materialId])
     res.json({message: "Price updated successfully!", status: true})
