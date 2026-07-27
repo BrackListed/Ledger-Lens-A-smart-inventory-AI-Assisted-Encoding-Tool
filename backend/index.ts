@@ -224,10 +224,11 @@ app.get("/materials/:storeId", async(req, res) => {
 
 
 app.get("/completed/:storeId", async(req, res) => {
-  const file = await pool.query("SELECT * FROM file WHERE store_id = $1 AND status = $2", [req.params.storeId, 'Confirmed'])
+  const materialFiles = await pool.query("SELECT * FROM file WHERE store_id = $1 AND status = $2 AND type = $3", [req.params.storeId, 'Confirmed', 'Materials'])
+  const saleFiles = await pool.query("SELECT * FROM file WHERE store_id = $1 AND status = $2 AND type = $3", [req.params.storeId, 'Confirmed', 'Materials'])
   const materials = await pool.query("SELECT materials.* FROM materials JOIN file ON materials.file_id = file.id WHERE materials.store_id = $1 AND file.status = 'Confirmed'", [req.params.storeId])
   const sales = await pool.query("SELECT sales.* FROM sales JOIN file ON sales.file_id = file.id WHERE sales.store_id = $1 AND file.status = 'Confirmed'", [req.params.storeId])
-  res.json({materials: materials.rows, files: file.rows, sales: sales.rows})
+  res.json({materials: materials.rows, materialFiles: materialFiles.rows, saleFiles: saleFiles.rows, sales: sales.rows})
 })
 
 
@@ -242,6 +243,19 @@ app.get("/sales/:storeId", async(req, res) => {
 app.patch("/confirm/:fileId", async(req, res) => {
   await pool.query("UPDATE file SET status = $1 WHERE id = $2", ['Confirmed', req.params.fileId])
   res.json(true)
+})
+
+app.patch("/update/material/:materialId", async(req, res) => {
+  if(req.body.price){
+    await pool.query("UPDATE materials SET preset_price = $1 WHERE id = $2", [req.body.price, req.params.materialId])
+    res.json({message: "Price updated successfully!", status: true})
+  } else if(req.body.sku){
+    await pool.query("UPDATE materials SET sku = $1 WHERE id = $2", [req.body.sku, req.params.materialId])
+    res.json({message: "SKU updated successfully!", status: true})
+  } else if(req.body.description){
+    await pool.query("UPDATE materials SET description = $1 WHERE id = $2", [req.body.description, req.params.materialId])
+    res.json({message: "Description updated successfully!", status: true})
+  }
 })
 
 app.delete("/delete/materials/:materialId/:storeId", async(req, res) => {

@@ -1,5 +1,6 @@
 import {
     AlertTriangle,
+    CheckCircle2,
     CloudUpload,
     Database,
     Layers3,
@@ -58,6 +59,7 @@ export function Settings() {
     const {getToken} = useAuth()
     const [activeTab, setActiveTab] = useState<SettingsTab>("set prices");
     const [itemSku, setItemSku] = useState("")
+    const [itemDescription, setItemDescription] = useState("")
     const [presetPrice, setPresetPrice] = useState(0)
     const [stores, setStores] = useState<storeType[]>([])
     const [materials, setMaterials] = useState<materialType[]>([])
@@ -66,6 +68,8 @@ export function Settings() {
     const [selectedFile, setSelectedFile] = useState<fileType | undefined>(undefined)
     const [sales, setSales] = useState<salesType[]>([])
     const filteredMaterials: materialType[] = selectedFile ? materials.filter((m) => m.file_id === selectedFile.id) : materials
+    const [success, setSuccess] = useState(false)
+    const [successMessage, setSuccessMessage] = useState("") 
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -88,6 +92,14 @@ export function Settings() {
         }
         fetchMaterialData()
     }, [selectedStore])
+
+    useEffect(() => {
+        if(success){
+            setTimeout(() => {
+                setSuccess(false)
+            }, 1000);
+        }
+    }, [success])
     return (
         <div className="relative min-h-screen overflow-hidden bg-[#050907] text-white">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_30%),radial-gradient(circle_at_top_right,rgba(22,101,52,0.18),transparent_26%),linear-gradient(to_bottom,rgba(255,255,255,0.03),transparent_28%)]" />
@@ -199,13 +211,13 @@ export function Settings() {
                                 <tbody>
                                     {filteredMaterials.map((material) => (<tr key={material.id} className="border-b border-white/8">
                                         <td className="px-4 py-4 align-top">
-                                            <input defaultValue={material.sku}className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
+                                            <input onChange={(e) => {setItemSku(e.target.value) ;updateMaterial(material.id, presetPrice, e.target.value, itemDescription)}} readOnly={true} defaultValue={material.sku}className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
                                         </td>
                                         <td className="px-4 py-4 align-top">
-                                            <input defaultValue={material.description} className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
+                                            <input onChange={(e) => {setItemDescription(e.target.value); updateMaterial(material.id, presetPrice, itemSku, e.target.value)}} readOnly={true} defaultValue={material.description} className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
                                         </td>
                                         <td className="px-4 py-4 align-top">
-                                            <input defaultValue={material.preset_price ?? "No preset price"} className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
+                                            <input onChange={(e) => {setPresetPrice(Number(e.target.value)); updateMaterial(material.id, Number(e.target.value), itemSku, itemDescription)}} defaultValue={material.preset_price ?? "No preset price"} className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
                                         </td>
                                         <td className="px-4 py-4 align-top">
                                             <input defaultValue={(Number(material.preset_price * 1.30).toFixed(2))} readOnly className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
@@ -413,6 +425,28 @@ export function Settings() {
                     )}
                 </section>
             </main>
+            {success && (
+                <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-lg bg-emerald-400 px-4 py-3 text-sm font-medium text-emerald-950 shadow-xl">
+                    <CheckCircle2 className="h-4 w-4" />
+                    {successMessage}
+                </div>
+            )}
         </div>
     );
+    async function updateMaterial(materialId: number, price: number, sku: string, description: string){
+        const token = getToken()
+        if(price){
+            const result = await axios.patch(`http://localhost:5000/update/material/${materialId}`, {price: price}, {headers: {Authorization: `Bearer ${token}`}})
+            setSuccess(result.data.status)
+            setSuccessMessage(result.data.message)
+        } else if(sku){
+            const result = await axios.patch(`http://localhost:5000/update/material/${materialId}`, {sku: sku}, {headers: {Authorization: `Bearer ${token}`}})
+            setSuccess(result.data.status)
+            setSuccessMessage(result.data.message)
+        } else if(description){
+            const result = await axios.patch(`http://localhost:5000/update/material/${materialId}`, {description: description}, {headers: {Authorization: `Bearer ${token}`}})
+            setSuccess(result.data.status)
+            setSuccessMessage(result.data.message)
+        }
+    }
 }
