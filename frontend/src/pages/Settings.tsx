@@ -62,13 +62,16 @@ export function Settings() {
     const [stores, setStores] = useState<storeType[]>([])
     const [materials, setMaterials] = useState<materialType[]>([])
     const [selectedStore, setSelectedStore] = useState<storeType | undefined>(undefined)
-    const [files, setFiles] = useState<fileType[]>([])
+    const [materialFiles, setMaterialFiles] = useState<fileType[]>([])
+    const [selectedFile, setSelectedFile] = useState<fileType | undefined>(undefined)
     const [sales, setSales] = useState<salesType[]>([])
+    const filteredMaterials = selectedFile ? materials.filter((m) => m.file_id === selectedFile.id) : materials
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
             const result = await axios.get("http://localhost:5000/store", {headers: {Authorization: `Bearer ${token}`}})
             setStores(result.data)
+            setSelectedStore(result.data[0])
         }
         fetchStoresData()
     }, [])
@@ -79,8 +82,10 @@ export function Settings() {
             const token = await getToken()
             const result = await axios.get(`http://localhost:5000/completed/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
             setMaterials(result.data.materials)
-            setFiles(result.data.files)
+            setMaterialFiles(result.data.materialFiles)
+            console.log(result.data.materialFiles)
             setSales(result.data.sales)
+            setSelectedFile(undefined)
         }
         fetchMaterialData()
     }, [selectedStore])
@@ -171,6 +176,18 @@ export function Settings() {
                                 </div>
                             </div>
 
+                            <div className="mt-4 flex items-center gap-3">
+                                <label className="text-xs uppercase tracking-[0.24em] text-white/35">Filter by file</label>
+                                <select
+                                    value={selectedFile?.id ?? ""}
+                                    className="w-64 rounded-xl border border-white/10 bg-[#0b120f] px-3 py-2 text-sm font-medium text-white outline-none"
+                                    onChange={(e) => setSelectedFile(materialFiles.find((file) => file.id === Number(e.target.value)))}
+                                >
+                                    <option value="" onClick={() => setSelectedFile(undefined)}>All files</option>
+                                    {materialFiles.map((file) => (<option key={file.id} value={file.id}>{file.filename}</option>))}
+                                </select>
+                            </div>
+
                             <table className="mt-5 w-full overflow-hidden rounded-[1.5rem] border border-white/8 bg-[#0c1210]">
                                 <thead>
                                     <tr className="border-b border-white/8 text-left text-xs uppercase tracking-[0.18em] text-white/45">
@@ -181,7 +198,7 @@ export function Settings() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {materials.map((material) => (<tr className="border-b border-white/8">
+                                    {filteredMaterials.map((material) => (<tr className="border-b border-white/8">
                                         <td className="px-4 py-4 align-top">
                                             <input defaultValue={material.sku}className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
                                         </td>
