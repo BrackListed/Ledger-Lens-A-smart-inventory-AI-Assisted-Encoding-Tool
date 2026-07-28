@@ -104,6 +104,15 @@ export function AnomalyReports() {
             fetchMarginFloors()
         }
     }, [activeTab])
+    useEffect(() => {
+        if(!selectedStore) return 
+        const fetchSalesData = async() => {
+            const token = getToken()
+            const result = await axios.get(`http://localhost:5000/completed/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
+            setSales(result.data.sales)
+        }
+        fetchSalesData()
+    }, [selectedStore])
     return (
         <div className="relative min-h-screen overflow-hidden bg-[#050907] text-white">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_30%),radial-gradient(circle_at_top_right,rgba(22,101,52,0.18),transparent_26%),linear-gradient(to_bottom,rgba(255,255,255,0.03),transparent_28%)]" />
@@ -297,9 +306,9 @@ export function AnomalyReports() {
                                     <div className="space-y-4">
                                         {flooredMaterials.map((material) => {
                                             const sale = sales.find(s => s.sku === material.sku)
-                                            if(!sale) return 
-                                            const ceiling = Number(material.unit_price) * (1 - Number(selectedStore?.margin_floor) / 100)
-                                            const belowAmount = material.unit_price - sale.sale_price
+                                            if(!sale) return null
+                                            const lossPercent = Math.round((1 - Number(sale.sale_price) / Number(material.unit_price)) * 100)
+                                            const priceDiff = material.unit_price - sale.sale_price
                                             return(
                                             <div key={material.id} className="rounded-[1.25rem] border border-white/8 bg-black/10 p-4">
                                                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -322,13 +331,13 @@ export function AnomalyReports() {
                                                         </div>
                                                     </div>
 
-                                                    <div className="inline-flex w-fit items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-sm font-semibold text-amber-300">
-                                                        {Number(material.profit_margin).toFixed(1)}% margin
+                                                    <div className="inline-flex w-fit items-center rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-sm font-semibold text-red-300">
+                                                        -{Number(lossPercent).toFixed(1)}% margin
                                                     </div>
                                                 </div>
 
                                                 <div className="mt-4 border-t border-white/8 pt-4 text-sm leading-relaxed text-white/70">
-                                                    Cost {Number(material.unit_price).toFixed(2)} · Sale  · {material.quantity} units · {(Number(material.unit_price) * material.quantity - Number(sale.sale_price * material.quantity)).toFixed(2)} below expected
+                                                    Cost {Number(material.unit_price).toFixed(2)} · Sale {sale.sale_price} · {material.quantity} units · {(Number(material.unit_price) * material.quantity - Number(sale.sale_price * material.quantity)).toFixed(2)} below expected · Price Difference {priceDiff.toFixed(2)}
                                                 </div>
                                             </div>
                                             )
