@@ -65,6 +65,7 @@ export function AnomalyReports() {
     const [storeDropdownOpen, setStoreDropdownOpen] = useState(false)
     const storeDropdownRef = useRef<HTMLDivElement>(null)
     const [spikedMaterials, setSpikedMaterials] = useState<materialType[]>([])
+    const [flooredMaterials, setFlooredMaterials] = useState<materialType[]>([])
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -90,7 +91,18 @@ export function AnomalyReports() {
             const result = await axios.get(`http://localhost:5000/flagged/pricespike/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
             setSpikedMaterials(result.data)
         }
-        fetchPriceSpikes()
+        if(activeTab === "price spike"){
+            fetchPriceSpikes()
+        }
+        const fetchMarginFloors = async() => {
+            if(!selectedStore) return 
+            const token = await getToken()
+            const result = await axios.get(`http://localhost:5000/flagged/marginloss/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
+            setFlooredMaterials(result.data)
+        }
+        if(activeTab === "margin loss"){
+            fetchMarginFloors()
+        }
     }, [activeTab])
     return (
         <div className="relative min-h-screen overflow-hidden bg-[#050907] text-white">
@@ -211,7 +223,7 @@ export function AnomalyReports() {
                         </div>
                     </div>
 
-                    <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(300px,1fr)]">
+                    <div className="mt-8">
                         <section className="space-y-4">
                             {activeTab === "all" && (
                                 <article className="group rounded-[1.5rem] border border-white/8 bg-[#0b110f] p-5 transition hover:-translate-y-0.5 hover:border-emerald-400/20 hover:bg-[#0d1512]">
@@ -241,7 +253,6 @@ export function AnomalyReports() {
                                     </div>
                                 </article>
                             )}
-
                             {activeTab === "price spike" && (
                                 <article className="group rounded-[1.5rem] border border-white/8 bg-[#0b110f] p-5 transition hover:-translate-y-0.5 hover:border-emerald-400/20 hover:bg-[#0d1512]">
                                     <div className="space-y-4">
@@ -283,29 +294,45 @@ export function AnomalyReports() {
 
                             {activeTab === "margin loss" && (
                                 <article className="group rounded-[1.5rem] border border-white/8 bg-[#0b110f] p-5 transition hover:-translate-y-0.5 hover:border-emerald-400/20 hover:bg-[#0d1512]">
-                                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                                        <div className="flex items-start gap-4">
-                                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-white/3 text-emerald-300">
-                                                <ArrowDownRight className="h-5 w-5" />
-                                            </div>
-                                            <div>
-                                                <div className="flex flex-wrap items-center gap-2">
-                                                    <h3 className="text-base font-semibold text-white sm:text-lg">Margin loss — SKU-009</h3>
-                                                    <span className="rounded-full border border-white/8 bg-white/3 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-white/45">
-                                                        margin loss
-                                                    </span>
+                                    <div className="space-y-4">
+                                        {flooredMaterials.map((material) => {
+                                            const sale = sales.find(s => s.sku === material.sku)
+                                            if(!sale) return 
+                                            const ceiling = Number(material.unit_price) * (1 - Number(selectedStore?.margin_floor) / 100)
+                                            const belowAmount = material.unit_price - sale.sale_price
+                                            return(
+                                            <div key={material.id} className="rounded-[1.25rem] border border-white/8 bg-black/10 p-4">
+                                                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                                    <div className="flex items-start gap-4">
+                                                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-white/3 text-emerald-300">
+                                                            <ArrowDownRight className="h-5 w-5" />
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <h3 className="text-base font-semibold text-white sm:text-lg">
+                                                                    Margin loss — {material.description}
+                                                                </h3>
+                                                                <span className="rounded-full border border-white/8 bg-white/3 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-white/45">
+                                                                    margin loss
+                                                                </span>
+                                                            </div>
+                                                            <p className="mt-1 text-sm text-white/55">
+                                                                Invoice #{material.file_id} · {material.sku}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="inline-flex w-fit items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-sm font-semibold text-amber-300">
+                                                        {Number(material.profit_margin).toFixed(1)}% margin
+                                                    </div>
                                                 </div>
-                                                <p className="mt-1 text-sm text-white/55">Sold below cost on 20 Jul</p>
+
+                                                <div className="mt-4 border-t border-white/8 pt-4 text-sm leading-relaxed text-white/70">
+                                                    Cost {Number(material.unit_price).toFixed(2)} · Sale  · {material.quantity} units · {(Number(material.unit_price) * material.quantity - Number(sale.sale_price * material.quantity)).toFixed(2)} below expected
+                                                </div>
                                             </div>
-                                        </div>
-
-                                        <div className="inline-flex w-fit items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-sm font-semibold text-amber-300">
-                                            -$18/unit
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-4 border-t border-white/8 pt-4 text-sm leading-relaxed text-white/70">
-                                        Cost $22.00 · sold at $4.00 · 3 units · $54 loss
+                                            )
+                                        })}
                                     </div>
                                 </article>
                             )}
@@ -343,39 +370,6 @@ export function AnomalyReports() {
                                 Tabs switch between the review groups above, keeping the page focused and easy to scan.
                             </div>
                         </section>
-
-                        <aside className="rounded-[1.5rem] border border-white/8 bg-[#0b110f] p-5">
-                            <div className="flex items-center justify-between gap-4">
-                                <div>
-                                    <p className="text-xs uppercase tracking-[0.24em] text-white/35">Report summary</p>
-                                    <h2 className="mt-2 text-lg font-semibold text-white">At a glance</h2>
-                                </div>
-                                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-400/15 bg-emerald-400/10 text-emerald-300">
-                                    <ShieldAlert className="h-5 w-5" />
-                                </div>
-                            </div>
-
-                            <div className="mt-5 space-y-3">
-                                <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-                                    <p className="text-sm text-white/55">Primary theme</p>
-                                    <p className="mt-1 text-sm font-medium text-white">Dark green, low-glow, operational dashboard</p>
-                                </div>
-
-                                <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-                                    <p className="text-sm text-white/55">Visual tone</p>
-                                    <p className="mt-1 text-sm font-medium text-white">Muted surfaces, crisp labels, warm alert accents</p>
-                                </div>
-
-                                <div className="rounded-2xl border border-white/8 bg-white/3 p-4">
-                                    <p className="text-sm text-white/55">Scope</p>
-                                    <p className="mt-1 text-sm font-medium text-white">Static layout with local tab switching</p>
-                                </div>
-                            </div>
-
-                            <div className="mt-5 rounded-2xl border border-white/8 bg-white/3 p-4 text-sm text-white/60">
-                                One highlighted example keeps the layout concise and readable.
-                            </div>
-                        </aside>
                     </div>
                 </section>
             </main>
