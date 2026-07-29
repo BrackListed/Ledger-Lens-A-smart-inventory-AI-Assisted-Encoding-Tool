@@ -245,9 +245,13 @@ app.get("/flagged/pricespike/:storeId", async(req, res) => {
 
 app.get("/flagged/marginloss/:storeId", async(req, res) => {
   const materials = await pool.query("SELECT materials.*, sales.sale_price FROm materials JOIN stores on materials.store_id = stores.id JOIN sales on sales.sku = materials.sku AND sales.store_id = stores.id WHERE materials.store_id = $1 AND sales.sale_price <= materials.unit_price * (1 - stores.margin_floor / 100)", [req.params.storeId])
-  console.log(materials.rows)
   res.json(materials.rows)
 
+})
+
+app.get("/flagged/stockmismatch/:storeId", async(req, res) => {
+  const materials = await pool.query("SELECT materials.*, sales.quantity AS sold_quantity FROM materials JOIN stores on materials.store_id = stores.id JOIN sales on sales.sku = materials.sku AND sales.store_id = stores.id WHERE materials.store_id = $1 AND sales.quantity > materials.quantity", [req.params.storeId])
+  res.json(materials.rows)
 })
 
 

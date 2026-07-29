@@ -39,14 +39,6 @@ export function AnomalyReports() {
         unit_price: number
     }
 
-    interface fileType{
-        id: number
-        filename: string
-        status: string
-        store_id: string
-        upload_date: string
-        user_id: string
-    }
 
     interface salesType{
         id: string
@@ -60,12 +52,12 @@ export function AnomalyReports() {
     const [activeTab, setActiveTab] = useState<ReportTab>("all");
     const [stores, setStores] = useState<storeType[]>([])
     const [selectedStore, setSelectedStore] = useState<storeType | undefined>(undefined)
-    const [materials, setMaterials] = useState<materialType[]>([])
     const [sales, setSales] = useState<salesType[]>([])
     const [storeDropdownOpen, setStoreDropdownOpen] = useState(false)
     const storeDropdownRef = useRef<HTMLDivElement>(null)
     const [spikedMaterials, setSpikedMaterials] = useState<materialType[]>([])
     const [flooredMaterials, setFlooredMaterials] = useState<materialType[]>([])
+    const [stockMismatch, setStockMismatch] = useState<materialType[]>([])
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -102,6 +94,15 @@ export function AnomalyReports() {
         }
         if(activeTab === "margin loss"){
             fetchMarginFloors()
+        }
+        const fetchStockMismatch = async() => {
+            if(!selectedStore) return 
+            const token = await getToken()
+            const result = await axios.get(`http://localhost:5000/flagged/stockmismatch/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
+            setStockMismatch(result.data)
+        }
+        if(activeTab === "stock mismatch"){
+            fetchStockMismatch()
         }
     }, [activeTab])
     useEffect(() => {
@@ -348,29 +349,39 @@ export function AnomalyReports() {
 
                             {activeTab === "stock mismatch" && (
                                 <article className="group rounded-[1.5rem] border border-white/8 bg-[#0b110f] p-5 transition hover:-translate-y-0.5 hover:border-emerald-400/20 hover:bg-[#0d1512]">
-                                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                                        <div className="flex items-start gap-4">
-                                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-white/3 text-emerald-300">
-                                                <ShieldAlert className="h-5 w-5" />
-                                            </div>
-                                            <div>
-                                                <div className="flex flex-wrap items-center gap-2">
-                                                    <h3 className="text-base font-semibold text-white sm:text-lg">Stock mismatch — SKU-004</h3>
-                                                    <span className="rounded-full border border-white/8 bg-white/3 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-white/45">
-                                                        stock mismatch
-                                                    </span>
+                                    <div className="space-y-4">
+                                        {stockMismatch.map((material) => {
+                                            const sale = sales.find(s => s.sku === material.sku)
+                                            if(!sale) return null
+                                            return(
+                                            <div key={material.id} className="rounded-[1.25rem] border border-white/8 bg-black/10 p-4">
+                                                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                                    <div className="flex items-start gap-4">
+                                                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-white/3 text-emerald-300">
+                                                            <ShieldAlert className="h-5 w-5" />
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <h3 className="text-base font-semibold text-white sm:text-lg">Stock mismatch — {material.sku}</h3>
+                                                                <span className="rounded-full border border-white/8 bg-white/3 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-white/45">
+                                                                    stock mismatch
+                                                                </span>
+                                                            </div>
+                                                            <p className="mt-1 text-sm text-white/55">Sold more than was stocked</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="inline-flex w-fit items-center rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-sm font-semibold text-orange-300">
+                                                        {material.quantity} units
+                                                    </div>
                                                 </div>
-                                                <p className="mt-1 text-sm text-white/55">Sold more than was stocked</p>
+
+                                                <div className="mt-4 border-t border-white/8 pt-4 text-sm leading-relaxed text-white/70">
+                                                    Stocked {material.quantity + sale.quantity} · sold {sale.quantity} · quantity went negative
+                                                </div>
                                             </div>
-                                        </div>
-
-                                        <div className="inline-flex w-fit items-center rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-sm font-semibold text-orange-300">
-                                            -12 units
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-4 border-t border-white/8 pt-4 text-sm leading-relaxed text-white/70">
-                                        Stocked 5 · sold 17 · quantity went negative
+                                            )
+                                        })}
                                     </div>
                                 </article>
                             )}
