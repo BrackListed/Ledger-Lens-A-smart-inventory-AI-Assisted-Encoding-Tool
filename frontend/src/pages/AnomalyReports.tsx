@@ -180,17 +180,17 @@ export function AnomalyReports() {
                     <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div className="rounded-2xl border border-white/8 bg-[#0c1210] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                             <p className="text-sm text-white/55">Total flagged</p>
-                            <p className="mt-2 text-3xl font-semibold tracking-tight text-white">7</p>
+                            <p className="mt-2 text-3xl font-semibold tracking-tight text-white">{spikedMaterials.length + flooredMaterials.length + stockMismatch.length}</p>
                             <p className="mt-2 text-xs text-white/38">Across invoices and sales</p>
                         </div>
                         <div className="rounded-2xl border border-white/8 bg-[#0c1210] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                             <p className="text-sm text-white/55">Overcharge exposure</p>
-                            <p className="mt-2 text-3xl font-semibold tracking-tight text-white">$1,240</p>
+                            <p className="mt-2 text-3xl font-semibold tracking-tight text-white">{spikedMaterials.reduce((sum, material) => sum + (Number(material.unit_price) - Number(material.preset_price)) * material.quantity, 0).toFixed(2)}</p>
                             <p className="mt-2 text-xs text-white/38">Estimated unapproved uplift</p>
                         </div>
                         <div className="rounded-2xl border border-white/8 bg-[#0c1210] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                             <p className="text-sm text-white/55">Below-cost sales</p>
-                            <p className="mt-2 text-3xl font-semibold tracking-tight text-white">2</p>
+                            <p className="mt-2 text-3xl font-semibold tracking-tight text-white">{flooredMaterials.length}</p>
                             <p className="mt-2 text-xs text-white/38">Items sold under target margin</p>
                         </div>
                     </div>
