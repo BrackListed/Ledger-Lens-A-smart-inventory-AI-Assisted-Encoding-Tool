@@ -23,6 +23,10 @@ const currency = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 })
 
+const number = new Intl.NumberFormat("en-US", {
+  maximumFractionDigits: 0,
+})
+
 const chartConfig = {
   profit: {
     label: "Profit",
@@ -119,7 +123,7 @@ export function ChartLineInteractive({ storeId }: { storeId?: string }) {
                     : "text-lg leading-none font-bold text-rose-400 sm:text-3xl"
                 }
               >
-                {currency.format(totalProfit)}
+                {number.format(totalProfit)}
               </span>
             </div>
           </div>

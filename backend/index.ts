@@ -238,6 +238,67 @@ app.get("/sales/:storeId", async(req, res) => {
   res.json({sales: sales.rows, file: file.rows})
 })
 
+app.get("/summary/:storeId", async(req, res) => {
+  const storeId = req.params.storeId
+
+  const revenueResult = await pool.query(
+    "SELECT COALESCE(SUM(total), 0) AS revenue FROM sales WHERE store_id = $1",
+    [storeId]
+  )
+  const cogsResult = await pool.query(
+    `SELECT COALESCE(SUM(sales.quantity * materials.unit_price), 0) AS cogs
+     FROM sales
+     JOIN materials ON sales.sku = materials.sku AND sales.store_id = materials.store_id
+     WHERE sales.store_id = $1`,
+    [storeId]
+  )
+  const inventoryResult = await pool.query(
+    "SELECT COALESCE(SUM(total_price), 0) AS inventory_value FROM materials WHERE store_id = $1",
+    [storeId]
+  )
+  const topSellersResult = await pool.query(
+    `SELECT materials.sku, materials.description, SUM(sales.quantity) AS quantity_sold
+     FROM sales
+     JOIN materials ON sales.sku = materials.sku AND sales.store_id = materials.store_id
+     WHERE sales.store_id = $1
+     GROUP BY materials.sku, materials.description
+     ORDER BY quantity_sold DESC
+     LIMIT 5`,
+    [storeId]
+  )
+  const priceSpikeResult = await pool.query(
+    "SELECT COUNT(*) FROM materials JOIN stores ON materials.store_id = stores.id WHERE materials.store_id = $1 AND materials.unit_price > materials.preset_price * (1 + stores.price_spike / 100)",
+    [storeId]
+  )
+  const marginLossResult = await pool.query(
+    "SELECT COUNT(*) FROM materials JOIN stores on materials.store_id = stores.id JOIN sales on sales.sku = materials.sku AND sales.store_id = stores.id WHERE materials.store_id = $1 AND sales.sale_price <= materials.unit_price * (1 - stores.margin_floor / 100)",
+    [storeId]
+  )
+  const stockMismatchResult = await pool.query(
+    "SELECT COUNT(*) FROM materials JOIN stores on materials.store_id = stores.id JOIN sales on sales.sku = materials.sku AND sales.store_id = stores.id WHERE materials.store_id = $1 AND sales.quantity > materials.quantity",
+    [storeId]
+  )
+
+  const revenue = Number(revenueResult.rows[0].revenue)
+  const cogs = Number(cogsResult.rows[0].cogs)
+  const anomaliesFlagged =
+    Number(priceSpikeResult.rows[0].count) +
+    Number(marginLossResult.rows[0].count) +
+    Number(stockMismatchResult.rows[0].count)
+
+  res.json({
+    revenue,
+    profit: revenue - cogs,
+    inventoryValue: Number(inventoryResult.rows[0].inventory_value),
+    anomaliesFlagged,
+    topSellers: topSellersResult.rows.map((row) => ({
+      sku: row.sku,
+      description: row.description,
+      quantitySold: Number(row.quantity_sold),
+    })),
+  })
+})
+
 app.get("/trend/sales/:storeId", async(req, res) => {
   const result = await pool.query(
     `SELECT DATE_TRUNC('month', sale_date) AS month, SUM(total) AS revenue

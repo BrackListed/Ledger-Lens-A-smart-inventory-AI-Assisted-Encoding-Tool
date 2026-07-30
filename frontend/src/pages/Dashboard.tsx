@@ -1,4 +1,4 @@
-import { Upload, ArrowRight, Check } from "lucide-react";
+import { Upload, ArrowRight, Check, Wallet, TrendingUp, Package, ShieldAlert, Trophy } from "lucide-react";
 import { Header } from "../assets/Header";
 import { ChartLineInteractive } from "#components/ChartLineInteractive";
 import { useEffect, useState } from "react";
@@ -6,11 +6,25 @@ import axios from "axios";
 import { useAuth } from "@clerk/react";
 import { Navigate, useNavigate } from "react-router-dom";
 
+const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 })
+
 export function Dashboard() {
   interface storeType{
     id: string
     name: string
     created_at: string
+  }
+  interface topSellerType{
+    sku: string
+    description: string
+    quantitySold: number
+  }
+  interface summaryType{
+    revenue: number
+    profit: number
+    inventoryValue: number
+    anomaliesFlagged: number
+    topSellers: topSellerType[]
   }
   const [fileName, setFileName] = useState("")
   const [file, setFile] = useState<File | undefined>(undefined)
@@ -19,6 +33,7 @@ export function Dashboard() {
   const [addedStore, setAddedStore] = useState(false)
   const {isLoaded, userId, getToken} = useAuth()
   const [selectedStore, setSelectedStore] = useState<storeType | undefined>(undefined)
+  const [summary, setSummary] = useState<summaryType | undefined>(undefined)
   const navigate = useNavigate()
   useEffect(() => {
     const fetchStoreData = async() => {
@@ -42,6 +57,16 @@ export function Dashboard() {
     }
     fetchStoreData()
   }, [])
+
+  useEffect(() => {
+    if(!selectedStore) return
+    const fetchSummary = async() => {
+      const token = await getToken()
+      const result = await axios.get(`http://localhost:5000/summary/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
+      setSummary(result.data)
+    }
+    fetchSummary()
+  }, [selectedStore, getToken])
 
   if(!isLoaded) return null
   if(!userId) return <Navigate to = "/intermission" replace />
@@ -186,10 +211,99 @@ export function Dashboard() {
         {selectedStore && (
           <section className="mt-14">
             <h2 className="text-lg font-semibold text-white/90">
-              {selectedStore.name} · Profit Over Time
+              {selectedStore.name} · Overview
             </h2>
-            <div className="mt-5">
-              <ChartLineInteractive storeId={selectedStore.id} />
+
+            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-2xl border border-white/8 bg-[#0c1210] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                <div className="flex items-center gap-2 text-white/55">
+                  <Wallet className="h-4 w-4 text-emerald-300" />
+                  <p className="text-sm">Revenue</p>
+                </div>
+                <p className="mt-2 text-3xl font-semibold tracking-tight text-white">
+                  {summary ? number.format(summary.revenue) : "—"}
+                </p>
+                <p className="mt-2 text-xs text-white/38">Total of sales</p>
+              </div>
+
+              <div className="rounded-2xl border border-white/8 bg-[#0c1210] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                <div className="flex items-center gap-2 text-white/55">
+                  <TrendingUp className="h-4 w-4 text-emerald-300" />
+                  <p className="text-sm">Profit</p>
+                </div>
+                <p
+                  className={
+                    summary && summary.profit < 0
+                      ? "mt-2 text-3xl font-semibold tracking-tight text-rose-400"
+                      : "mt-2 text-3xl font-semibold tracking-tight text-white"
+                  }
+                >
+                  {summary ? number.format(summary.profit) : "—"}
+                </p>
+                <p className="mt-2 text-xs text-white/38">
+                  Only counts the cost of the materials you've sold
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/8 bg-[#0c1210] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                <div className="flex items-center gap-2 text-white/55">
+                  <Package className="h-4 w-4 text-emerald-300" />
+                  <p className="text-sm">Inventory Value</p>
+                </div>
+                <p className="mt-2 text-3xl font-semibold tracking-tight text-white">
+                  {summary ? number.format(summary.inventoryValue) : "—"}
+                </p>
+                <p className="mt-2 text-xs text-white/38">Total of materials</p>
+              </div>
+
+              <div className="rounded-2xl border border-white/8 bg-[#0c1210] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                <div className="flex items-center gap-2 text-white/55">
+                  <ShieldAlert className="h-4 w-4 text-emerald-300" />
+                  <p className="text-sm">Anomalies Flagged</p>
+                </div>
+                <p className="mt-2 text-3xl font-semibold tracking-tight text-white">
+                  {summary ? number.format(summary.anomaliesFlagged) : "—"}
+                </p>
+                <p className="mt-2 text-xs text-white/38">Price spikes, margin loss &amp; stock mismatches</p>
+              </div>
+            </div>
+
+            <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+              <div className="lg:col-span-2">
+                <ChartLineInteractive storeId={selectedStore.id} />
+              </div>
+
+              <div className="rounded-2xl border border-white/8 bg-[#0c1210] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                <div className="flex items-center gap-2 text-white/55">
+                  <Trophy className="h-4 w-4 text-emerald-300" />
+                  <p className="text-sm">Top Sellers</p>
+                </div>
+                <div className="mt-4 space-y-2">
+                  {summary && summary.topSellers.length > 0 ? (
+                    summary.topSellers.map((item, index) => (
+                      <div
+                        key={item.sku}
+                        className="flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-white/3 px-3 py-2"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-400/10 text-xs font-semibold text-emerald-300">
+                            {index + 1}
+                          </span>
+                          <div>
+                            <p className="text-sm text-white">{item.description}</p>
+                            <p className="text-xs text-white/38">{item.sku}</p>
+                          </div>
+                        </div>
+                        <span className="shrink-0 text-sm font-semibold text-white">
+                          {item.quantitySold} sold
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-white/40">No sales yet</p>
+                  )}
+                </div>
+              </div>
             </div>
           </section>
         )}
