@@ -378,6 +378,49 @@ app.patch("/set/thresholds/:storeId", async(req, res) => {
 })
 
 
+app.patch("/encode/preset/:storeId", upload.single("preset"), async(req, res) => {
+  const workbook = XLSX.readFile(req.file!.path)
+  const sheet = workbook.Sheets[workbook.SheetNames[0]]
+  const data = XLSX.utils.sheet_to_json(sheet, {header: 1}) as any[][]
+  const completion = await groq.chat.completions.create({
+    model: "openai/gpt-oss-20b",
+    response_format: {type: "json_object"},
+    messages: [{
+      role: "system",
+      content: `Map spreadsheet columns to fields. Return JSON only.
+      Fields (column number, or null): sku, preset_price
+      - sku: item code / product code / SKU
+      - preset_price: the preset / target price per unit
+      Shape: {"sku":n,"preset_price":n}
+      Only assign a column number if that field clearly exists in the header. If a field has no matching column, set it to null. Do NOT shift or guess — a missing field is null, never a borrowed index.
+      The column numbers start from 0`
+    },
+    {
+      role: "user",
+      content: JSON.stringify(data[0])
+    }
+    ],
+    temperature: 0
+  })
+  const raw = completion.choices[0]?.message?.content || ''
+  const clean = raw.replace(/```json|```/g, '').trim()
+  const columns = JSON.parse(clean)
+  const cutoff = data.findIndex(row => !row[columns.sku] && !row[columns.preset_price])
+  const rawPresets = cutoff === -1 ? data.slice(1) : data.slice(1, cutoff)
+  const presets = rawPresets.map((row) => ({
+    sku: row[columns.sku],
+    preset_price: row[columns.preset_price],
+  }))
+  const promises = presets.map((preset) =>
+    pool.query(
+      "UPDATE materials SET preset_price = $1, profit_margin = ((unit_price - $1) / $1) * 100 WHERE store_id = $2 AND sku = $3",
+      [preset.preset_price, req.params.storeId, preset.sku]
+    )
+  )
+  await Promise.all(promises)
+  res.json({message: "Preset prices updated successfully", status: true, presets: presets})
+})
+
 app.delete("/delete/materials/:materialId/:storeId", async(req, res) => {
   await pool.query("DELETE FROM materials WHERE id = $1 AND store_id = $2", [req.params.materialId, req.params.storeId])
   res.json(true)
