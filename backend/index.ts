@@ -238,6 +238,30 @@ app.get("/sales/:storeId", async(req, res) => {
   res.json({sales: sales.rows, file: file.rows})
 })
 
+app.get("/trend/sales/:storeId", async(req, res) => {
+  const result = await pool.query(
+    `SELECT DATE_TRUNC('month', sale_date) AS month, SUM(total) AS revenue
+     FROM sales
+     WHERE store_id = $1
+     GROUP BY month
+     ORDER BY month`,
+    [req.params.storeId]
+  )
+  res.json(result.rows)
+})
+
+app.get("/trend/materials/:storeId", async(req, res) => {
+  const result = await pool.query(
+    `SELECT DATE_TRUNC('month', purchased_at) AS month, SUM(total_price) AS cost
+     FROM materials
+     WHERE store_id = $1
+     GROUP BY month
+     ORDER BY month`,
+    [req.params.storeId]
+  )
+  res.json(result.rows)
+})
+
 app.get("/flagged/pricespike/:storeId", async(req, res) => {
   const materials = await pool.query("SELECT materials.* FROM materials JOIN stores ON materials.store_id = stores.id WHERE materials.store_id = $1 AND materials.unit_price > materials.preset_price * (1 + stores.price_spike / 100)", [req.params.storeId])
   res.json(materials.rows)

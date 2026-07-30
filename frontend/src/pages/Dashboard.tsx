@@ -1,5 +1,6 @@
-import { Upload, ArrowRight, Check, Sparkles, Zap, RefreshCw } from "lucide-react";
+import { Upload, ArrowRight, Check } from "lucide-react";
 import { Header } from "../assets/Header";
+import { ChartLineInteractive } from "#components/ChartLineInteractive";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/react";
@@ -182,83 +183,16 @@ export function Dashboard() {
           </div>
         </div>
 
-        <section className="mt-24">
-          <h2 className="text-lg font-semibold text-white/90">Feature Highlights</h2>
-
-          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-400/10">
-                <Sparkles className="h-5 w-5 text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-white">AI-Powered Extraction</p>
-                <p className="mt-1 text-xs leading-relaxed text-white/40">
-                  AI powered extraction pulls line items straight off messy vendor invoices.
-                </p>
-              </div>
+        {selectedStore && (
+          <section className="mt-14">
+            <h2 className="text-lg font-semibold text-white/90">
+              {selectedStore.name} · Profit Over Time
+            </h2>
+            <div className="mt-5">
+              <ChartLineInteractive storeId={selectedStore.id} />
             </div>
-
-            <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-400/10">
-                <Zap className="h-5 w-5 text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-white">Groq Speed Inference</p>
-                <p className="mt-1 text-xs leading-relaxed text-white/40">
-                  Groq speed inference parses documents in a fraction of a second.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-400/10">
-                <RefreshCw className="h-5 w-5 text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-white">Instant ERP Sync</p>
-                <p className="mt-1 text-xs leading-relaxed text-white/40">
-                  Instant ERP sync keeps ledgers reconciled the moment data lands.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-400/10">
-                <Sparkles className="h-5 w-5 text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-white">AI-Powered Extraction</p>
-                <p className="mt-1 text-xs leading-relaxed text-white/40">
-                  AI powered extraction pulls line items straight off messy vendor invoices.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-400/10">
-                <Zap className="h-5 w-5 text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-white">Groq Speed Inference</p>
-                <p className="mt-1 text-xs leading-relaxed text-white/40">
-                  Groq speed inference parses documents in a fraction of a second.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-400/10">
-                <RefreshCw className="h-5 w-5 text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-white">Instant ERP Sync</p>
-                <p className="mt-1 text-xs leading-relaxed text-white/40">
-                  Instant ERP sync keeps ledgers reconciled the moment data lands.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+          </section>
+        )}
       </main>
     </div>
   );

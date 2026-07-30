@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Header } from "../assets/Header";
+import { ChartLineInteractive } from "#components/ChartLineInteractive";
 import axios from "axios";
 import { useAuth } from "@clerk/react";
 
@@ -193,6 +194,10 @@ export function AnomalyReports() {
                             <p className="mt-2 text-3xl font-semibold tracking-tight text-white">{flooredMaterials.length}</p>
                             <p className="mt-2 text-xs text-white/38">Items sold under target margin</p>
                         </div>
+                    </div>
+
+                    <div className="mt-8">
+                        <ChartLineInteractive storeId={selectedStore?.id} />
                     </div>
 
                     <div className="mt-8 flex flex-wrap items-center gap-3">
