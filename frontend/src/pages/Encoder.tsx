@@ -191,7 +191,12 @@ export function Encoder(){
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <button className="rounded-md border border-white/15 px-4 py-2 text-sm text-white/80">
+                        <button
+                            type="button"
+                            onClick={() => deleteFile(file?.id, selectedStore.id)}
+                            className="inline-flex items-center gap-2 rounded-md border border-rose-500/20 bg-rose-500/10 px-4 py-2 text-sm font-medium text-rose-200 transition hover:cursor-pointer hover:border-rose-500/40 hover:bg-rose-500/20 hover:text-rose-100"
+                        >
+                            <Trash2 className="h-4 w-4" />
                             Discard File
                         </button>
                         <button onClick={() => confirmFile(file?.id)} className="rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 hover:cursor-pointer">
@@ -389,11 +394,23 @@ export function Encoder(){
     }
 
     async function sendSales(sales: salesType[], fileId: number){
-        const result = await axios.post(`http://localhost:5000/confirm/sales/${fileId}`, {sales: sales})
+        const token = await getToken()
+        const result = await axios.post(`http://localhost:5000/confirm/sales/${fileId}`, {sales: sales}, {headers: {Authorization: `Bearer ${token}`}})
         setForwardedToStore(result.data)
         if(result.data){
             setSales([])
             setSalesFileName("")
+        }
+    }
+
+    async function deleteFile(id: number | undefined, storeId: string){
+        const token = await getToken()
+        const result = await axios.delete(`http://localhost:5000/delete/file/${id}/${storeId}`, {headers: {Authorization: `Bearer ${token}`}})
+        setSuccess(result.data)
+        setSuccessMessage("File discarded successfully")
+        if(result.data){
+            setMaterials([])
+            setFileName("")
         }
     }
 
