@@ -1,5 +1,5 @@
 import * as React from "react"
-import axios from "axios"
+import { api } from "#lib/api"
 import { useAuth } from "@clerk/react"
 import { CartesianGrid, Line, LineChart, XAxis } from "recharts"
 
@@ -51,8 +51,8 @@ export function ChartLineInteractive({ storeId }: { storeId?: string }) {
       const token = await getToken()
       const headers = { Authorization: `Bearer ${token}` }
       const [salesTrend, materialsTrend] = await Promise.all([
-        axios.get(`http://localhost:5000/trend/sales/${storeId}`, { headers }),
-        axios.get(`http://localhost:5000/trend/materials/${storeId}`, { headers }),
+        api.get(`/trend/sales/${storeId}`, { headers }),
+        api.get(`/trend/materials/${storeId}`, { headers }),
       ])
 
       const revenueByMonth = new Map<string, number>(

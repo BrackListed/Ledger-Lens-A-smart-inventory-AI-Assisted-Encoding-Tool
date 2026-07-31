@@ -10,7 +10,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { Header } from "../assets/Header";
 import { ChartLineInteractive } from "#components/ChartLineInteractive";
-import axios from "axios";
+import { api } from "#lib/api";
 import { useAuth } from "@clerk/react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 
@@ -79,7 +79,7 @@ export function AnomalyReports() {
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
-            const result = await axios.get("http://localhost:5000/store", {headers: {Authorization: `Bearer ${token}`}})
+            const result = await api.get("/store", {headers: {Authorization: `Bearer ${token}`}})
             setStores(result.data)
             setSelectedStore(result.data[0])
         }
@@ -98,21 +98,21 @@ export function AnomalyReports() {
         const fetchPriceSpikes = async() => {
             if(!selectedStore) return 
             const token = await getToken()
-            const result = await axios.get(`http://localhost:5000/flagged/pricespike/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
+            const result = await api.get(`/flagged/pricespike/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
             setSpikedMaterials(result.data)
         }
         fetchPriceSpikes()
         const fetchMarginFloors = async() => {
             if(!selectedStore) return 
             const token = await getToken()
-            const result = await axios.get(`http://localhost:5000/flagged/marginloss/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
+            const result = await api.get(`/flagged/marginloss/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
             setFlooredMaterials(result.data)
         }
         fetchMarginFloors()
         const fetchStockMismatch = async() => {
             if(!selectedStore) return 
             const token = await getToken()
-            const result = await axios.get(`http://localhost:5000/flagged/stockmismatch/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
+            const result = await api.get(`/flagged/stockmismatch/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
             setStockMismatch(result.data)
         }
         fetchStockMismatch()
@@ -121,7 +121,7 @@ export function AnomalyReports() {
         if(!selectedStore) return 
         const fetchSalesData = async() => {
             const token = getToken()
-            const result = await axios.get(`http://localhost:5000/completed/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
+            const result = await api.get(`/completed/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
             setSales(result.data.sales)
         }
         fetchSalesData()

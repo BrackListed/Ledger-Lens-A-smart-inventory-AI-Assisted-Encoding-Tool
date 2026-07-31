@@ -2,7 +2,7 @@ import { Upload, ArrowRight, Check, Wallet, TrendingUp, Package, ShieldAlert, Tr
 import { Header } from "../assets/Header";
 import { ChartLineInteractive } from "#components/ChartLineInteractive";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { api } from "#lib/api";
 import { useAuth } from "@clerk/react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { motion, type Variants } from "framer-motion";
@@ -59,7 +59,7 @@ export function Dashboard() {
   useEffect(() => {
     const fetchStoreData = async() => {
       const token = await getToken()
-      const result = await axios.get("http://localhost:5000/store", {headers: {Authorization: `Bearer ${token}`}})
+      const result = await api.get("/store", {headers: {Authorization: `Bearer ${token}`}})
       setStores(result.data)
     }
     if(addedStore){
@@ -73,7 +73,7 @@ export function Dashboard() {
   useEffect(() => {
     const fetchStoreData = async() => {
       const token = await getToken()
-      const result = await axios.get("http://localhost:5000/store", {headers: {Authorization: `Bearer ${token}`}})
+      const result = await api.get("/store", {headers: {Authorization: `Bearer ${token}`}})
       setStores(result.data)
     }
     fetchStoreData()
@@ -83,7 +83,7 @@ export function Dashboard() {
     if(!selectedStore) return
     const fetchSummary = async() => {
       const token = await getToken()
-      const result = await axios.get(`http://localhost:5000/summary/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
+      const result = await api.get(`/summary/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
       setSummary(result.data)
     }
     fetchSummary()
@@ -386,7 +386,7 @@ export function Dashboard() {
 
   async function createStore(name: string){
     const token = await getToken()
-    const result = await axios.post("http://localhost:5000/create/store", {name: name}, {headers: {Authorization: `Bearer ${token}`}})
+    const result = await api.post("/create/store", {name: name}, {headers: {Authorization: `Bearer ${token}`}})
     setAddedStore(result.data)
   }
 
@@ -396,7 +396,7 @@ export function Dashboard() {
     formData.append("file", file)
     formData.append("name", name)
     const token = await getToken()
-    const result = await axios.post(`http://localhost:5000/encode/${storeId}`, formData, {headers: {Authorization: `Bearer ${token}`}})
+    const result = await api.post(`/encode/${storeId}`, formData, {headers: {Authorization: `Bearer ${token}`}})
     if(result.data.status) {
       navigate("/encoder", {state: {store}})
     } else{

@@ -1,7 +1,7 @@
 import { CheckCircle2, AlertTriangle, FileText, Trash2, XIcon, Loader2 } from "lucide-react";
 import { Header } from "../assets/Header";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { api } from "#lib/api";
 import { useAuth } from "@clerk/react";
 import { useLocation } from "react-router-dom"
 import DatePicker from "react-datepicker";
@@ -88,7 +88,7 @@ export function Encoder(){
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
-            const result = await axios.get("http://localhost:5000/store", {headers: {Authorization: `Bearer ${token}`}})
+            const result = await api.get("/store", {headers: {Authorization: `Bearer ${token}`}})
             setStores(result.data)
         }
         fetchStoresData()
@@ -97,7 +97,7 @@ export function Encoder(){
         if(!selectedStore) return
         const fetchMaterialsData = async() => {
             const token = await getToken()
-            const result = await axios.get(`http://localhost:5000/materials/${selectedStore?.id}`, {headers: {Authorization: `Bearer ${token}`}})
+            const result = await api.get(`/materials/${selectedStore?.id}`, {headers: {Authorization: `Bearer ${token}`}})
             setFileName(result.data.file?.[0]?.filename ?? "")
             setFile(result.data.file[0])
             setMaterials(result.data.materials)
@@ -106,7 +106,7 @@ export function Encoder(){
         const fetchSalesData = async() => {
             if(!selectedStore) return
             const token = await getToken()
-            const result = await axios.get(`http://localhost:5000/sales/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
+            const result = await api.get(`/sales/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
             console.log(result.data.file)
             setSales(result.data.sales)
             setSalesFileName(result.data.file[0].filename)
@@ -443,7 +443,7 @@ export function Encoder(){
     )
     
     async function confirmFile(id: number | undefined){
-        const result = await axios.patch(`http://localhost:5000/confirm/${id}`)
+        const result = await api.patch(`/confirm/${id}`)
         setSuccess(result.data)
         if(result.data){
             setMaterials([])
@@ -457,7 +457,7 @@ export function Encoder(){
         const formData = new FormData()
         formData.append("sales", file)
         formData.append("name", name)
-        const result = await axios.post(`http://localhost:5000/encode/sales/${storeId}`, formData, {headers: {Authorization: `Bearer ${token}`}})
+        const result = await api.post(`/encode/sales/${storeId}`, formData, {headers: {Authorization: `Bearer ${token}`}})
         setSales(result.data.sales)
         setSalesFileId(result.data.id)
         setSuccess(result.data.status)
@@ -467,7 +467,7 @@ export function Encoder(){
 
     async function sendSales(sales: salesType[], fileId: number){
         const token = await getToken()
-        const result = await axios.post(`http://localhost:5000/confirm/sales/${fileId}`, {sales: sales}, {headers: {Authorization: `Bearer ${token}`}})
+        const result = await api.post(`/confirm/sales/${fileId}`, {sales: sales}, {headers: {Authorization: `Bearer ${token}`}})
         setForwardedToStore(result.data)
         if(result.data){
             setSales([])
@@ -477,7 +477,7 @@ export function Encoder(){
 
     async function deleteFile(id: number | undefined, storeId: string){
         const token = await getToken()
-        const result = await axios.delete(`http://localhost:5000/delete/file/${id}/${storeId}`, {headers: {Authorization: `Bearer ${token}`}})
+        const result = await api.delete(`/delete/file/${id}/${storeId}`, {headers: {Authorization: `Bearer ${token}`}})
         setSuccess(result.data)
         setSuccessMessage("File discarded successfully")
         if(result.data){

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Header } from "../assets/Header";
 import { useAuth } from "@clerk/react";
-import axios from "axios";
+import { api } from "#lib/api";
 import { FileText, Trash2 } from "lucide-react";
 import { motion, type Variants } from "framer-motion";
 
@@ -78,7 +78,7 @@ export function Stores(){
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
-            const result = await axios.get("http://localhost:5000/store", {headers: {Authorization: `Bearer ${token}`}})
+            const result = await api.get("/store", {headers: {Authorization: `Bearer ${token}`}})
             setStores(result.data)
         }
         fetchStoresData()
@@ -87,7 +87,7 @@ export function Stores(){
         if(!selectedStore) return 
         const fetchMaterialData = async() => {
             const token = await getToken()
-            const result = await axios.get(`http://localhost:5000/completed/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
+            const result = await api.get(`/completed/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
             setMaterials(result.data.materials)
             setFiles(result.data.materialFiles)
             setSalesFiles(result.data.saleFiles)
@@ -99,7 +99,7 @@ export function Stores(){
         if(!selectedStore) return 
         const fetchMaterialData = async() => {
             const token = await getToken()
-            const result = await axios.get(`http://localhost:5000/completed/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
+            const result = await api.get(`/completed/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
             setMaterials(result.data.materials)
             setFiles(result.data.files)
             setSales(result.data.sales)
@@ -294,13 +294,13 @@ export function Stores(){
 
     async function deleteMaterial(materialId: number, storeId: string){
         const token = getToken()
-        const result = await axios.delete(`http://localhost:5000/delete/materials/${materialId}/${storeId}`, {headers: {Authorization: `Bearer ${token}`}})
+        const result = await api.delete(`/delete/materials/${materialId}/${storeId}`, {headers: {Authorization: `Bearer ${token}`}})
         setDeletedMaterial(result.data)
     }
 
     async function deleteFile(fileId: number, storeId: string){
         const token = getToken()
-        const result = await axios.delete(`http://localhost:5000/delete/file/${fileId}/${storeId}`, {headers: {Authorization: `Bearer ${token}`}})
+        const result = await api.delete(`/delete/file/${fileId}/${storeId}`, {headers: {Authorization: `Bearer ${token}`}})
         setDeletedFile(result.data)
     }
 }

@@ -13,7 +13,7 @@ import {
 import { useEffect, useState } from "react";
 import { Header } from "../assets/Header";
 import { useAuth } from "@clerk/react";
-import axios from "axios";
+import { api } from "#lib/api";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 
 const pageFade: Variants = {
@@ -87,7 +87,7 @@ export function Settings() {
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
-            const result = await axios.get("http://localhost:5000/store", {headers: {Authorization: `Bearer ${token}`}})
+            const result = await api.get("/store", {headers: {Authorization: `Bearer ${token}`}})
             setStores(result.data)
             setSelectedStore(result.data[0])
         }
@@ -103,7 +103,7 @@ export function Settings() {
         if(!selectedStore) return 
         const fetchStoresData = async() => {
             const token = await getToken()
-            const result = await axios.get("http://localhost:5000/store", {headers: {Authorization: `Bearer ${token}`}})
+            const result = await api.get("/store", {headers: {Authorization: `Bearer ${token}`}})
             setStores(result.data)
             setSelectedStore(result.data.find((s: storeType) => s.id === selectedStore?.id) ?? result.data[0])
         }
@@ -539,7 +539,7 @@ export function Settings() {
     );
     async function fetchMaterialData(storeId: string){
         const token = await getToken()
-        const result = await axios.get(`http://localhost:5000/completed/${storeId}`, {headers: {Authorization: `Bearer ${token}`}})
+        const result = await api.get(`/completed/${storeId}`, {headers: {Authorization: `Bearer ${token}`}})
         setMaterials(result.data.materials)
         setMaterialFiles(result.data.materialFiles)
     }
@@ -547,16 +547,16 @@ export function Settings() {
     async function updateMaterial(materialId: number, price: number, sku: string, description: string){
         const token = getToken()
         if(price){
-            const result = await axios.patch(`http://localhost:5000/update/material/${materialId}`, {price: price}, {headers: {Authorization: `Bearer ${token}`}})
+            const result = await api.patch(`/update/material/${materialId}`, {price: price}, {headers: {Authorization: `Bearer ${token}`}})
             setMaterials((currentMaterials) => currentMaterials.map((material) => material.id === materialId ? {...material, preset_price: price} : material))
             setSuccess(result.data.status)
             setSuccessMessage(result.data.message)
         } else if(sku){
-            const result = await axios.patch(`http://localhost:5000/update/material/${materialId}`, {sku: sku}, {headers: {Authorization: `Bearer ${token}`}})
+            const result = await api.patch(`/update/material/${materialId}`, {sku: sku}, {headers: {Authorization: `Bearer ${token}`}})
             setSuccess(result.data.status)
             setSuccessMessage(result.data.message)
         } else if(description){
-            const result = await axios.patch(`http://localhost:5000/update/material/${materialId}`, {description: description}, {headers: {Authorization: `Bearer ${token}`}})
+            const result = await api.patch(`/update/material/${materialId}`, {description: description}, {headers: {Authorization: `Bearer ${token}`}})
             setSuccess(result.data.status)
             setSuccessMessage(result.data.message)
         }
@@ -564,7 +564,7 @@ export function Settings() {
     
     async function updateAnomalyThresholds(storeId: string, thresholds: {spike?: number, floor?: number, mismatch?: number}){
         const token = await getToken()
-        const result = await axios.patch(`http://localhost:5000/set/thresholds/${storeId}`, thresholds, {headers: {Authorization: `Bearer ${token}`}})
+        const result = await api.patch(`/set/thresholds/${storeId}`, thresholds, {headers: {Authorization: `Bearer ${token}`}})
         setSuccess(result.data.status)
         setSuccessMessage(result.data.message)
     }
@@ -574,7 +574,7 @@ export function Settings() {
         const token = await getToken()
         const formData = new FormData()
         formData.append("preset", preset)
-        const result = await axios.patch(`http://localhost:5000/encode/preset/${storeId}`, formData, {headers: {Authorization: `Bearer ${token}`}})
+        const result = await api.patch(`/encode/preset/${storeId}`, formData, {headers: {Authorization: `Bearer ${token}`}})
         setSuccess(result.data.status)
         setSuccessMessage(result.data.message)
         if(result.data.status){
@@ -585,14 +585,14 @@ export function Settings() {
 
     async function renameStore(storeId: string, name: string){
         const token = await getToken()
-        const result = await axios.patch(`http://localhost:5000/store/${storeId}`, {name: name}, {headers: {Authorization: `Bearer ${token}`}})
+        const result = await api.patch(`/store/${storeId}`, {name: name}, {headers: {Authorization: `Bearer ${token}`}})
         setSuccess(result.data.status)
         setSuccessMessage(result.data.message)
     }
 
     async function deleteStore(storeId: string){
         const token = await getToken()
-        const result = await axios.delete(`http://localhost:5000/store/${storeId}`, {headers: {Authorization: `Bearer ${token}`}})
+        const result = await api.delete(`/store/${storeId}`, {headers: {Authorization: `Bearer ${token}`}})
         setSuccess(result.data.status)
         setSuccessMessage(result.data.message)
     }
