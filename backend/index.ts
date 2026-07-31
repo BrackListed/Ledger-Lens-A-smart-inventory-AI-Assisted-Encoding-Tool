@@ -287,7 +287,7 @@ app.get("/summary/:storeId", async(req, res) => {
     [storeId]
   )
   const stockMismatchResult = await pool.query(
-    "SELECT COUNT(*) FROM materials JOIN stores on materials.store_id = stores.id JOIN sales on sales.sku = materials.sku AND sales.store_id = stores.id WHERE materials.store_id = $1 AND sales.quantity > materials.quantity",
+    "SELECT COUNT(*) FROM materials WHERE materials.store_id = $1 AND materials.quantity < 0",
     [storeId]
   )
 
@@ -347,7 +347,7 @@ app.get("/flagged/marginloss/:storeId", async(req, res) => {
 })
 
 app.get("/flagged/stockmismatch/:storeId", async(req, res) => {
-  const materials = await pool.query("SELECT materials.*, sales.quantity AS sold_quantity FROM materials JOIN stores on materials.store_id = stores.id JOIN sales on sales.sku = materials.sku AND sales.store_id = stores.id WHERE materials.store_id = $1 AND sales.quantity > materials.quantity", [req.params.storeId])
+  const materials = await pool.query("SELECT materials.* FROM materials WHERE materials.store_id = $1 AND materials.quantity < 0", [req.params.storeId])
   res.json(materials.rows)
 })
 

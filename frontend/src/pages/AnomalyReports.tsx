@@ -353,8 +353,6 @@ export function AnomalyReports() {
                                         })}
 
                                         {stockMismatch.map((material) => {
-                                            const sale = sales.find(s => s.sku === material.sku)
-                                            if(!sale) return null
                                             return(
                                             <div key={`mismatch-${material.id}`} className="rounded-[1.25rem] border border-white/8 bg-black/10 p-4">
                                                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -374,12 +372,12 @@ export function AnomalyReports() {
                                                     </div>
 
                                                     <div className="inline-flex w-fit items-center rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-sm font-semibold text-orange-300">
-                                                        {material.quantity} units
+                                                        {Math.abs(material.quantity)} units short
                                                     </div>
                                                 </div>
 
                                                 <div className="mt-4 border-t border-white/8 pt-4 text-sm leading-relaxed text-white/70">
-                                                    Stocked {material.quantity + sale.quantity} · sold {sale.quantity} · quantity went negative
+                                                    Current stock {material.quantity} · sold more than was ever received
                                                 </div>
                                             </div>
                                             )
@@ -500,8 +498,6 @@ export function AnomalyReports() {
                                 >
                                     <div className="space-y-4">
                                         {stockMismatch.map((material, index) => {
-                                            const sale = sales.find(s => s.sku === material.sku)
-                                            if(!sale) return null
                                             return(
                                             <motion.div key={material.id} className="rounded-[1.25rem] border border-white/8 bg-black/10 p-4" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, delay: index * 0.03, ease: "easeOut" }}>
                                                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -521,12 +517,12 @@ export function AnomalyReports() {
                                                     </div>
 
                                                     <div className="inline-flex w-fit items-center rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-sm font-semibold text-orange-300">
-                                                        {material.quantity} units
+                                                        {Math.abs(material.quantity)} units short
                                                     </div>
                                                 </div>
 
                                                 <div className="mt-4 border-t border-white/8 pt-4 text-sm leading-relaxed text-white/70">
-                                                    Stocked {material.quantity + sale.quantity} · sold {sale.quantity} · quantity went negative
+                                                    Current stock {material.quantity} · sold more than was ever received
                                                 </div>
                                             </motion.div>
                                             )
