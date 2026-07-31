@@ -64,6 +64,7 @@ export function Settings() {
     const [success, setSuccess] = useState(false)
     const [successMessage, setSuccessMessage] = useState("")
     const [costSheetFileName, setCostSheetFileName] = useState("")
+    const [renameValues, setRenameValues] = useState<Record<string, string>>({})
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -75,15 +76,8 @@ export function Settings() {
     }, [])
 
     useEffect(() => {
-        if(!selectedStore) return 
-        const fetchMaterialData = async() => {
-            const token = await getToken()
-            const result = await axios.get(`http://localhost:5000/completed/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
-            setMaterials(result.data.materials)
-            setMaterialFiles(result.data.materialFiles)
-            setSelectedFile(undefined)
-        }
-        fetchMaterialData()
+        if(!selectedStore) return
+        fetchMaterialData(selectedStore.id).then(() => setSelectedFile(undefined))
     }, [selectedStore?.id])
 
     useEffect(() => {
@@ -344,69 +338,57 @@ export function Settings() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr className="border-b border-white/8">
-                                        <td className="px-4 py-4 align-top">
-                                            <input type="radio" name="store" defaultChecked />
-                                        </td>
-                                        <td className="px-4 py-4 align-top text-sm font-medium text-white">T-Shirt Store</td>
-                                        <td className="px-4 py-4 align-top">
-                                            <input defaultValue="T-Shirt Store" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
-                                        </td>
-                                        <td className="px-4 py-4 align-top">
-                                            <div className="flex gap-2">
-                                                <button type="button" className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-[#0c1210] px-3 py-2 text-sm text-white/75 transition hover:text-white">
-                                                    <PencilLine className="h-4 w-4 text-emerald-300" />
-                                                    Rename
-                                                </button>
-                                                <button type="button" className="inline-flex items-center gap-2 rounded-full border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-200 transition hover:bg-rose-500/15">
-                                                    <Trash2 className="h-4 w-4" />
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr className="border-b border-white/8">
-                                        <td className="px-4 py-4 align-top">
-                                            <input type="radio" name="store" />
-                                        </td>
-                                        <td className="px-4 py-4 align-top text-sm font-medium text-white">Warehouse East</td>
-                                        <td className="px-4 py-4 align-top">
-                                            <input defaultValue="Warehouse East" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
-                                        </td>
-                                        <td className="px-4 py-4 align-top">
-                                            <div className="flex gap-2">
-                                                <button type="button" className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-[#0c1210] px-3 py-2 text-sm text-white/75 transition hover:text-white">
-                                                    <PencilLine className="h-4 w-4 text-emerald-300" />
-                                                    Rename
-                                                </button>
-                                                <button type="button" className="inline-flex items-center gap-2 rounded-full border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-200 transition hover:bg-rose-500/15">
-                                                    <Trash2 className="h-4 w-4" />
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td className="px-4 py-4 align-top">
-                                            <input type="radio" name="store" />
-                                        </td>
-                                        <td className="px-4 py-4 align-top text-sm font-medium text-white">Pop-up Market</td>
-                                        <td className="px-4 py-4 align-top">
-                                            <input defaultValue="Pop-up Market" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
-                                        </td>
-                                        <td className="px-4 py-4 align-top">
-                                            <div className="flex gap-2">
-                                                <button type="button" className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-[#0c1210] px-3 py-2 text-sm text-white/75 transition hover:text-white">
-                                                    <PencilLine className="h-4 w-4 text-emerald-300" />
-                                                    Rename
-                                                </button>
-                                                <button type="button" className="inline-flex items-center gap-2 rounded-full border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-200 transition hover:bg-rose-500/15">
-                                                    <Trash2 className="h-4 w-4" />
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                    {stores.length === 0 && (
+                                        <tr>
+                                            <td colSpan={4} className="px-4 py-4 text-sm text-white/40">
+                                                No stores found
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {stores.map((store, index) => (
+                                        <tr key={store.id} className={index === stores.length - 1 ? "" : "border-b border-white/8"}>
+                                            <td className="px-4 py-4 align-top">
+                                                <input
+                                                    type="radio"
+                                                    name="store"
+                                                    checked={selectedStore?.id === store.id}
+                                                    onChange={() => setSelectedStore(store)}
+                                                />
+                                            </td>
+                                            <td className="px-4 py-4 align-top text-sm font-medium text-white">{store.name}</td>
+                                            <td className="px-4 py-4 align-top">
+                                                <input
+                                                    value={renameValues[store.id] ?? store.name}
+                                                    onChange={(e) => setRenameValues(prev => ({...prev, [store.id]: e.target.value}))}
+                                                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none"
+                                                />
+                                            </td>
+                                            <td className="px-4 py-4 align-top">
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => renameStore(store.id, renameValues[store.id] ?? store.name)}
+                                                        className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-[#0c1210] px-3 py-2 text-sm text-white/75 transition hover:cursor-pointer hover:text-white"
+                                                    >
+                                                        <PencilLine className="h-4 w-4 text-emerald-300" />
+                                                        Rename
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if(window.confirm(`Delete "${store.name}"? This removes all of its materials, sales, and files.`)){
+                                                                deleteStore(store.id)
+                                                            }
+                                                        }}
+                                                        className="inline-flex items-center gap-2 rounded-full border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-200 transition hover:cursor-pointer hover:bg-rose-500/15"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
                         </section>
@@ -466,6 +448,13 @@ export function Settings() {
             )}
         </div>
     );
+    async function fetchMaterialData(storeId: string){
+        const token = await getToken()
+        const result = await axios.get(`http://localhost:5000/completed/${storeId}`, {headers: {Authorization: `Bearer ${token}`}})
+        setMaterials(result.data.materials)
+        setMaterialFiles(result.data.materialFiles)
+    }
+
     async function updateMaterial(materialId: number, price: number, sku: string, description: string){
         const token = getToken()
         if(price){
@@ -495,8 +484,25 @@ export function Settings() {
         const token = await getToken()
         const formData = new FormData()
         formData.append("preset", preset)
-        const result = axios.patch(`http://localhost:5000/encode/preset/${storeId}`, formData, {headers: {Authorization: `Bearer ${token}`}})
-        setSuccess((await result).data.status)
-        setSuccessMessage((await result).data.message)
+        const result = await axios.patch(`http://localhost:5000/encode/preset/${storeId}`, formData, {headers: {Authorization: `Bearer ${token}`}})
+        setSuccess(result.data.status)
+        setSuccessMessage(result.data.message)
+        if(result.data.status){
+            fetchMaterialData(storeId)
+        }
+    }
+
+    async function renameStore(storeId: string, name: string){
+        const token = await getToken()
+        const result = await axios.patch(`http://localhost:5000/store/${storeId}`, {name: name}, {headers: {Authorization: `Bearer ${token}`}})
+        setSuccess(result.data.status)
+        setSuccessMessage(result.data.message)
+    }
+
+    async function deleteStore(storeId: string){
+        const token = await getToken()
+        const result = await axios.delete(`http://localhost:5000/store/${storeId}`, {headers: {Authorization: `Bearer ${token}`}})
+        setSuccess(result.data.status)
+        setSuccessMessage(result.data.message)
     }
 }

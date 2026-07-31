@@ -9,7 +9,7 @@
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(52, 211, 153, 0.4) rgba(255, 255, 255, 0.05);
+  scrollbar-color: rgba(52, 211, 153, 0.45) #0b120f;
 }
 
 *::-webkit-scrollbar {
@@ -18,16 +18,20 @@
 }
 
 *::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: #0b120f;
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: rgba(52, 211, 153, 0.4);
+  background-color: rgba(52, 211, 153, 0.45);
   border-radius: 9999px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(52, 211, 153, 0.6);
+  background-color: rgba(52, 211, 153, 0.7);
+}
+
+*::-webkit-scrollbar-corner {
+  background: #0b120f;
 }
 
 .react-datepicker {

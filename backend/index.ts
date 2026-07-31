@@ -3,7 +3,7 @@ import express from "express"
 import cors from "cors"
 import { Pool } from "pg"
 import { drizzle } from "drizzle-orm/node-postgres"
-import { clerkMiddleware, getAuth } from "@clerk/express"
+import { clerkClient, clerkMiddleware, getAuth } from "@clerk/express"
 import { verifyWebhook } from "@clerk/express/webhooks"
 import Groq from "groq-sdk";
 // Provide a lightweight declaration for multer to satisfy TypeScript when @types/multer is not installed
@@ -62,29 +62,51 @@ const storage = multer.diskStorage({
 
 const upload = multer({storage: storage})
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+// Falls back to provisioning the user row here in case the Clerk webhook
+// (which normally inserts it on user.created) never fired, e.g. in local dev
+// without a webhook tunnel configured.
+async function getOrCreateUserId(userId: string){
+  const existing = await pool.query("SELECT id FROM users WHERE clerk_user_id = $1", [userId])
+  if(existing.rows[0]?.id) return existing.rows[0].id as string
+  const clerkUser = await clerkClient.users.getUser(userId)
+  const email = clerkUser.emailAddresses[0]?.emailAddress ?? ""
+  const username = clerkUser.username ?? clerkUser.firstName ?? userId
+  const inserted = await pool.query(
+    "INSERT INTO users(clerk_user_id, email, username) VALUES($1, $2, $3) RETURNING id",
+    [userId, email, username]
+  )
+  return inserted.rows[0].id as string
+}
+
 app.post("/create/store", async(req, res) => {
   const {userId} = getAuth(req)
-  const result = await pool.query("SELECT id FROM users WHERE clerk_user_id = $1", [userId])
-  const id = result.rows[0]?.id
+  const id = await getOrCreateUserId(userId!)
   await pool.query("INSERT INTO stores(name, user_id) VALUES($1, $2)", [req.body.name, id])
   res.json(true)
 })
 
 app.get("/store", async(req, res) => {
   const {userId} = getAuth(req)
-  const fetch = await pool.query("SELECT id FROM users WHERE clerk_user_id = $1", [userId])
-  const id = fetch.rows[0]?.id
-  if (!id) return res.status(404).json({ error: "User not found" })
+  const id = await getOrCreateUserId(userId!)
   const result = await pool.query("SELECT * FROM stores WHERE user_id = $1", [id])
   res.json(result.rows)
+})
+
+app.patch("/store/:storeId", async(req, res) => {
+  await pool.query("UPDATE stores SET name = $1 WHERE id = $2", [req.body.name, req.params.storeId])
+  res.json({message: "Store renamed successfully!", status: true})
+})
+
+app.delete("/store/:storeId", async(req, res) => {
+  await pool.query("DELETE FROM stores WHERE id = $1", [req.params.storeId])
+  res.json({message: "Store deleted successfully!", status: true})
 })
 
 app.post("/encode/:storeId", upload.single("file"), async(req, res) => {
   const {userId} = getAuth(req)
   const pending = await pool.query("SELECT id FROM file WHERE store_id = $1 AND status = 'Pending' AND type = 'Materials'", [req.params.storeId])
-  const fetch = await pool.query("SELECT id FROM users WHERE clerk_user_id = $1", [userId])
-  const id = fetch.rows[0]?.id
-  if(!id) return res.status(404).json({error: "User not found"})
+  const id = await getOrCreateUserId(userId!)
   if(pending.rows.length > 0) {
     return res.json({message: "You have items on pending. Verify them before adding a new one!", status: false})
   }
@@ -144,10 +166,8 @@ app.post("/encode/:storeId", upload.single("file"), async(req, res) => {
 
 app.post("/encode/sales/:storeId", upload.single("sales"), async(req, res) => {
   const {userId} = getAuth(req)
-  const fetch = await pool.query("SELECT id FROM users WHERE clerk_user_id = $1", [userId])
   const pending = await pool.query("SELECT id FROM file WHERE store_id = $1 AND status = 'Pending' AND type = 'Sales'", [req.params.storeId])
-  const id = fetch.rows[0]?.id
-  if (!id) return res.status(404).json({ error: "User not found" })
+  const id = await getOrCreateUserId(userId!)
   if(pending.rows.length > 0) {
     return res.json({message: "You have sales on pending. Verify them before adding a new one!", status: false})
   }
@@ -205,15 +225,7 @@ app.post("/encode/sales/:storeId", upload.single("sales"), async(req, res) => {
 
 app.post("/confirm/sales/:fileId", async(req, res) => {
   await pool.query("UPDATE file SET status = $1 WHERE id = $2", ["Confirmed", req.params.fileId])
-  res.json(true)
-})
-
-app.get("/store", async(req, res) => {
-  const {userId} = getAuth(req)
-  const fetch = await pool.query("SELECT id FROM users WHERE clerk_user_id = $1", [userId])
-  const id = fetch.rows[0]?.id
-  const store = await pool.query("SELECT * FROM stores WHERE user_id = $1", [id])
-  res.json(store.rows)
+  res.json({status: true, message: "Materials forwarded to store successfully"})
 })
 
 app.get("/materials/:storeId", async(req, res) => {
