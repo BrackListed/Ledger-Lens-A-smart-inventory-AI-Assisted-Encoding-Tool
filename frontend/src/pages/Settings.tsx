@@ -8,7 +8,6 @@ import {
     Settings2,
     Store,
     Trash2,
-    Upload,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Header } from "../assets/Header";
@@ -64,6 +63,7 @@ export function Settings() {
     const filteredMaterials: materialType[] = selectedFile ? materials.filter((m) => m.file_id === selectedFile.id) : materials
     const [success, setSuccess] = useState(false)
     const [successMessage, setSuccessMessage] = useState("")
+    const [costSheetFileName, setCostSheetFileName] = useState("")
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -429,21 +429,28 @@ export function Settings() {
                                     <tr className="border-b border-white/8 text-left text-xs uppercase tracking-[0.18em] text-white/45">
                                         <th className="px-4 py-3">File</th>
                                         <th className="px-4 py-3">Accepted types</th>
-                                        <th className="px-4 py-3">Upload</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
                                         <td className="px-4 py-4 align-top">
-                                            <input type="file" accept=".csv,.xls,.xlsx" className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-400 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-emerald-950" />
+                                            <input
+                                                type="file"
+                                                accept=".csv,.xls,.xlsx"
+                                                className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-400 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-emerald-950"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0]
+                                                    setCostSheetFileName(file?.name ?? "")
+                                                    if (file && selectedStore?.id) {
+                                                        encodePresetCost(file, selectedStore.id)
+                                                    }
+                                                }}
+                                            />
+                                            {costSheetFileName && (
+                                                <p className="mt-2 text-xs text-white/50">{costSheetFileName}</p>
+                                            )}
                                         </td>
                                         <td className="px-4 py-4 align-top text-sm text-white/70">CSV, XLS, XLSX</td>
-                                        <td className="px-4 py-4 align-top">
-                                            <button type="button" className="inline-flex items-center gap-2 rounded-2xl border border-emerald-400/20 bg-emerald-400 px-4 py-3 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-300">
-                                                <Upload className="h-4 w-4" />
-                                                Upload sheet
-                                            </button>
-                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -482,5 +489,14 @@ export function Settings() {
         const result = await axios.patch(`http://localhost:5000/set/thresholds/${storeId}`, thresholds, {headers: {Authorization: `Bearer ${token}`}})
         setSuccess(result.data.status)
         setSuccessMessage(result.data.message)
+    }
+
+    async function encodePresetCost(preset: File, storeId: string){
+        const token = await getToken()
+        const formData = new FormData()
+        formData.append("preset", preset)
+        const result = axios.patch(`http://localhost:5000/encode/preset/${storeId}`, formData, {headers: {Authorization: `Bearer ${token}`}})
+        setSuccess((await result).data.status)
+        setSuccessMessage((await result).data.message)
     }
 }

@@ -84,28 +84,22 @@ export function AnomalyReports() {
             const result = await axios.get(`http://localhost:5000/flagged/pricespike/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
             setSpikedMaterials(result.data)
         }
-        if(activeTab === "price spike"){
-            fetchPriceSpikes()
-        }
+        fetchPriceSpikes()
         const fetchMarginFloors = async() => {
             if(!selectedStore) return 
             const token = await getToken()
             const result = await axios.get(`http://localhost:5000/flagged/marginloss/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
             setFlooredMaterials(result.data)
         }
-        if(activeTab === "margin loss"){
-            fetchMarginFloors()
-        }
+        fetchMarginFloors()
         const fetchStockMismatch = async() => {
             if(!selectedStore) return 
             const token = await getToken()
             const result = await axios.get(`http://localhost:5000/flagged/stockmismatch/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
             setStockMismatch(result.data)
         }
-        if(activeTab === "stock mismatch"){
-            fetchStockMismatch()
-        }
-    }, [activeTab])
+        fetchStockMismatch()
+    }, [])
     useEffect(() => {
         if(!selectedStore) return 
         const fetchSalesData = async() => {
@@ -114,7 +108,7 @@ export function AnomalyReports() {
             setSales(result.data.sales)
         }
         fetchSalesData()
-    }, [selectedStore])
+    }, [selectedStore, activeTab])
     return (
         <div className="relative min-h-screen overflow-hidden bg-[#050907] text-white">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_30%),radial-gradient(circle_at_top_right,rgba(22,101,52,0.18),transparent_26%),linear-gradient(to_bottom,rgba(255,255,255,0.03),transparent_28%)]" />
