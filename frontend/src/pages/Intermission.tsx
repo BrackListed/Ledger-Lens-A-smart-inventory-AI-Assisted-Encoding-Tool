@@ -9,13 +9,18 @@ export function Intermission(){
     const navigate = useNavigate()
 
     const continueAsGuest = async () => {
-        if(!signIn) return
+    if (!signIn) return
+    try {
         const result = await signIn.create({
             identifier: import.meta.env.VITE_GUEST_EMAIL,
             password: import.meta.env.VITE_GUEST_PASSWORD,
         })
+        console.log("signin status:", result.status)
         await setActive({ session: result.createdSessionId })
         navigate("/")
+    } catch (err) {
+            console.log("guest signin failed:", err)
+        }
     }
 
     if(!isLoaded) return null
