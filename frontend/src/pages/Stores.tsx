@@ -83,6 +83,7 @@ export function Stores(){
             const result = await axios.get(`http://localhost:5000/completed/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
             setMaterials(result.data.materials)
             setFiles(result.data.files)
+            setSales(result.data.sales)
         }
         if(deletedMaterial){
             fetchMaterialData()

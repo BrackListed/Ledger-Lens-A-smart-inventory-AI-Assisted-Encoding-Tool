@@ -77,7 +77,7 @@ export function Encoder(){
         fetchStoresData()
     }, [])
     useEffect(() => {
-        if(!selectedStore) return 
+        if(!selectedStore) return
         const fetchMaterialsData = async() => {
             const token = await getToken()
             const result = await axios.get(`http://localhost:5000/materials/${selectedStore?.id}`, {headers: {Authorization: `Bearer ${token}`}})
@@ -87,7 +87,7 @@ export function Encoder(){
         }
         fetchMaterialsData()
         const fetchSalesData = async() => {
-            if(!selectedStore) return 
+            if(!selectedStore) return
             const token = await getToken()
             const result = await axios.get(`http://localhost:5000/sales/${selectedStore.id}`, {headers: {Authorization: `Bearer ${token}`}})
             console.log(result.data.file)
@@ -369,7 +369,11 @@ export function Encoder(){
     
     async function confirmFile(id: number | undefined){
         const result = await axios.patch(`http://localhost:5000/confirm/${id}`)
-        setSaved(result.data)
+        setSuccess(result.data)
+        if(result.data){
+            setMaterials([])
+            setFileName("")
+        }
     }
 
     async function encodeSales(file: File, storeId: string, name: string){
@@ -387,6 +391,10 @@ export function Encoder(){
     async function sendSales(sales: salesType[], fileId: number){
         const result = await axios.post(`http://localhost:5000/confirm/sales/${fileId}`, {sales: sales})
         setForwardedToStore(result.data)
+        if(result.data){
+            setSales([])
+            setSalesFileName("")
+        }
     }
 
 }

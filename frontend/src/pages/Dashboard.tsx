@@ -1,4 +1,4 @@
-import { Upload, ArrowRight, Check, Wallet, TrendingUp, Package, ShieldAlert, Trophy } from "lucide-react";
+import { Upload, ArrowRight, Check, Wallet, TrendingUp, Package, ShieldAlert, Trophy, Loader2 } from "lucide-react";
 import { Header } from "../assets/Header";
 import { ChartLineInteractive } from "#components/ChartLineInteractive";
 import { useEffect, useState } from "react";
@@ -34,6 +34,7 @@ export function Dashboard() {
   const {isLoaded, userId, getToken} = useAuth()
   const [selectedStore, setSelectedStore] = useState<storeType | undefined>(undefined)
   const [summary, setSummary] = useState<summaryType | undefined>(undefined)
+  const [isEncoding, setIsEncoding] = useState(false)
   const navigate = useNavigate()
   useEffect(() => {
     const fetchStoreData = async() => {
@@ -73,6 +74,17 @@ export function Dashboard() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#060a09] text-white">
       <div className="pointer-events-none absolute left-1/2 top-40 h-[420px] w-[720px] -translate-x-1/2 rounded-full bg-emerald-500/10 blur-[120px]" />
+
+      {isEncoding && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-[#0b120f] px-8 py-10 text-center shadow-2xl">
+            <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
+            <p className="text-sm font-medium text-white/90">
+              Loading AI response and automatic redirect...
+            </p>
+          </div>
+        </div>
+      )}
 
     <Header/>
 
@@ -318,6 +330,7 @@ export function Dashboard() {
   }
 
   async function encode(storeId: string, name: string, file: File, store: storeType){
+    setIsEncoding(true)
     const formData = new FormData()
     formData.append("file", file)
     formData.append("name", name)
@@ -326,6 +339,7 @@ export function Dashboard() {
     if(result.data.status) {
       navigate("/encoder", {state: {store}})
     } else{
+      setIsEncoding(false)
       alert(result.data.message)
     }
   }
