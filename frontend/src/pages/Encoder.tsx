@@ -7,7 +7,23 @@ import { useLocation } from "react-router-dom"
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { v4 as uuidv4 } from 'uuid';
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 
+const pageFade: Variants = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.06,
+            delayChildren: 0.04,
+        },
+    },
+}
+
+const cardRise: Variants = {
+    hidden: { opacity: 0, y: 14 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+}
 
 export function Encoder(){
     interface storeType{
@@ -123,24 +139,37 @@ export function Encoder(){
         }
     }, [success])
     return(
-        <div className="relative min-h-screen overflow-hidden bg-[#060a09] text-white">
-            {isEncodingSales && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-                    <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-[#0b120f] px-8 py-10 text-center shadow-2xl">
-                        <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
-                        <p className="text-sm font-medium text-white/90">
-                            Awaiting AI response.. This may take a bit depending on size
-                        </p>
-                    </div>
-                </div>
-            )}
+        <motion.div className="relative min-h-screen overflow-hidden bg-[#060a09] text-white" initial="hidden" animate="show" variants={pageFade}>
+            <AnimatePresence>
+                {isEncodingSales && (
+                    <motion.div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <motion.div
+                            className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-[#0b120f] px-8 py-10 text-center shadow-2xl"
+                            initial={{ opacity: 0, scale: 0.92, y: 12 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.92, y: 12 }}
+                            transition={{ duration: 0.28, ease: "easeOut" }}
+                        >
+                            <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
+                            <p className="text-sm font-medium text-white/90">
+                                Awaiting AI response.. This may take a bit depending on size
+                            </p>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <Header/>
 
-            <main className="relative z-10 mx-auto max-w-6xl px-8 py-10">
-                <h1 className="text-xl font-semibold">Automated Encoder &amp; Confirmation</h1>
+            <motion.main className="relative z-10 mx-auto max-w-6xl px-8 py-10" variants={pageFade}>
+                <motion.h1 className="text-xl font-semibold" variants={cardRise}>Automated Encoder &amp; Confirmation</motion.h1>
 
-                <div className="flex items-start gap-4">
+                <motion.div className="flex items-start gap-4" variants={cardRise}>
                     <div className="relative mt-4 max-w-xs">
                         <p className="mb-2 text-xs text-white/50">Selected Store</p>
                         <input
@@ -151,10 +180,15 @@ export function Encoder(){
                             placeholder="Search store..."
                             className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-emerald-400/50 focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
                         />
+                        <AnimatePresence>
                         {storeQuery && isStoreFocused && (
-                            <div
+                            <motion.div
                                 onMouseDown={(e) => e.preventDefault()}
                                 className="absolute z-10 mt-1 w-full rounded-md border border-white/10 bg-[#0d1412] py-1 shadow-xl"
+                                initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                                transition={{ duration: 0.18, ease: "easeOut" }}
                             >
                                 {filteredStores.length > 0 ? (
                                     filteredStores.map((store) => (
@@ -169,29 +203,30 @@ export function Encoder(){
                                 ) : (
                                     <div className="px-3 py-2 text-sm text-white/30">No matches</div>
                                 )}
-                            </div>
+                            </motion.div>
                         )}
+                        </AnimatePresence>
                     </div>
 
                     {selectedStore && (
-                        <div className="mt-4 flex flex-col">
+                        <motion.div className="mt-4 flex flex-col" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, ease: "easeOut" }}>
                             <p className="mb-2 text-xs text-white/50 invisible">Selected</p>
                             <div className="whitespace-nowrap rounded-md border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-300">
                                 Selected Store: {selectedStore.name}
                             </div>
-                        </div>
+                        </motion.div>
                     )}
-                </div>
+                </motion.div>
 
                 {!selectedStore && (
-                    <p className="mt-10 text-center text-lg font-semibold text-orange-400">
+                    <motion.p className="mt-10 text-center text-lg font-semibold text-orange-400" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, ease: "easeOut" }}>
                         Select a store first!
-                    </p>
+                    </motion.p>
                 )}
 
                 {selectedStore && (
                 <>
-                <div className="mt-6 flex items-center justify-between rounded-xl border border-white/10 bg-white/3 px-5 py-4">
+                <motion.div className="mt-6 flex items-center justify-between rounded-xl border border-white/10 bg-white/3 px-5 py-4" variants={cardRise} initial="hidden" animate="show">
                     <div>
                         <div className="flex items-center gap-2 text-sm">
                             <span className="text-white/60">Processing:</span>
@@ -203,19 +238,21 @@ export function Encoder(){
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <button
+                        <motion.button
                             type="button"
                             onClick={() => deleteFile(file?.id, selectedStore.id)}
                             className="inline-flex items-center gap-2 rounded-md border border-rose-500/20 bg-rose-500/10 px-4 py-2 text-sm font-medium text-rose-200 transition hover:cursor-pointer hover:border-rose-500/40 hover:bg-rose-500/20 hover:text-rose-100"
+                            whileHover={{ y: -2 }}
+                            whileTap={{ scale: 0.97 }}
                         >
                             <Trash2 className="h-4 w-4" />
                             Discard File
-                        </button>
-                        <button onClick={() => confirmFile(file?.id)} className="rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 hover:cursor-pointer">
+                        </motion.button>
+                        <motion.button onClick={() => confirmFile(file?.id)} className="rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 hover:cursor-pointer" whileHover={{ y: -2, scale: 1.01 }} whileTap={{ scale: 0.98 }}>
                             Confirm &amp; Send to Material List
-                        </button>
+                        </motion.button>
                     </div>
-                </div>
+                </motion.div>
 
                 <h2 className="mt-8 text-sm font-semibold text-white/90">
                     Extracted Material Line Items (Draft)
@@ -236,7 +273,7 @@ export function Encoder(){
                             </tr>
                         </thead>
                         <tbody>
-                            {materials.map((material) => (<tr className="border-t border-white/5">
+                            {materials.map((material, index) => (<motion.tr className="border-t border-white/5" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2, delay: index * 0.02, ease: "easeOut" }}>
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.sku}</td>
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.description}</td>
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.quantity}</td>
@@ -250,7 +287,7 @@ export function Encoder(){
                                         <span>{material.status === "Verified" ? "Verified" : "Flagged"}</span>
                                     </span>
                                 </td>
-                            </tr>))}
+                            </motion.tr>))}
                         </tbody>
                     </table>
                 </div>
@@ -291,17 +328,18 @@ export function Encoder(){
                                 wrapperClassName="mt-2 w-full block"
                                 className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white placeholder:text-white/30"
                             />
-                            <button onClick={async() => setSales(prev => [...prev, {...singularSale, id: uuidv4()}])} className="mt-3 w-full rounded-md bg-white/10 py-2 text-xs font-medium text-white/90">
+                            <motion.button onClick={async() => setSales(prev => [...prev, {...singularSale, id: uuidv4()}])} className="mt-3 w-full rounded-md bg-white/10 py-2 text-xs font-medium text-white/90" whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
                                 Add Single Sale
-                            </button>
+                            </motion.button>
                         </div>
                     </div>
 
                     <div>
                         <p className="mb-2 text-xs text-white/50">(Bulk Upload)</p>
-                        <label
+                        <motion.label
                             htmlFor="sales-sheet-upload"
                             className="flex h-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 bg-white/2 p-4 text-center"
+                            whileHover={{ y: -2, borderColor: "rgba(52,211,153,0.4)" }}
                         >
                             <FileText className="h-6 w-6 text-white/40" />
                             <p className="text-xs text-white/50">
@@ -320,7 +358,7 @@ export function Encoder(){
                                     }
                                 }}
                             />
-                        </label>
+                        </motion.label>
                     </div>
                 </div>
 
@@ -339,7 +377,7 @@ export function Encoder(){
                             </tr>
                         </thead>
                         <tbody>
-                            {sales?.map((sale) => (<tr key={sale.id} className="border-t border-white/5">
+                            {sales?.map((sale, index) => (<motion.tr key={sale.id} className="border-t border-white/5" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2, delay: index * 0.02, ease: "easeOut" }}>
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.date ?? new Date().toLocaleDateString()}</td>
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.sku}</td>
                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.quantity}</td>
@@ -350,38 +388,58 @@ export function Encoder(){
                                         <Trash2 className="h-3.5 w-3.5" />
                                     </button>
                                 </td>
-                            </tr>))}
+                            </motion.tr>))}
                         </tbody>
                     </table>
                 </div>
 
-                <button onClick={() => sendSales(sales, salesFileId)} className="mt-4 rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 hover:cursor-pointer">
+                <motion.button onClick={() => sendSales(sales, salesFileId)} className="mt-4 rounded-md bg-emerald-400 px-4 py-2 text-sm font-medium text-emerald-950 hover:bg-emerald-500 hover:cursor-pointer" whileHover={{ y: -2, scale: 1.01 }} whileTap={{ scale: 0.98 }}>
                     Forward to Stores
-                </button>
+                </motion.button>
                 </>
                 )}
 
+                <AnimatePresence>
                 {forwardedToStore && (
-                    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-lg bg-emerald-400 px-4 py-3 text-sm font-medium text-emerald-950 shadow-xl">
+                    <motion.div
+                        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-lg bg-emerald-400 px-4 py-3 text-sm font-medium text-emerald-950 shadow-xl"
+                        initial={{ opacity: 0, y: 16, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 16, scale: 0.95 }}
+                        transition={{ duration: 0.25, ease: "easeOut" }}
+                    >
                         <CheckCircle2 className="h-4 w-4" />
                         Sales forwarded to store successfully
-                    </div>
+                    </motion.div>
                 )}
                 {success && (
-                    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-lg bg-emerald-400 px-4 py-3 text-sm font-medium text-emerald-950 shadow-xl">
+                    <motion.div
+                        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-lg bg-emerald-400 px-4 py-3 text-sm font-medium text-emerald-950 shadow-xl"
+                        initial={{ opacity: 0, y: 16, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 16, scale: 0.95 }}
+                        transition={{ duration: 0.25, ease: "easeOut" }}
+                    >
                         <CheckCircle2 className="h-4 w-4" />
                         {successMessage}
-                    </div>
+                    </motion.div>
                 )}
                 {success === false && (
-                    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-lg bg-red-400 px-4 py-3 text-sm font-medium text-zinc-100 shadow-xl">
+                    <motion.div
+                        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-lg bg-red-400 px-4 py-3 text-sm font-medium text-zinc-100 shadow-xl"
+                        initial={{ opacity: 0, y: 16, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 16, scale: 0.95 }}
+                        transition={{ duration: 0.25, ease: "easeOut" }}
+                    >
                         <XIcon className="h-4 w-4" />
                         {successMessage}
-                    </div>
+                    </motion.div>
                 )}
-            </main>
+                </AnimatePresence>
+            </motion.main>
 
-        </div>
+        </motion.div>
     )
     
     async function confirmFile(id: number | undefined){

@@ -4,6 +4,7 @@ import {
     CloudUpload,
     Database,
     Layers3,
+    Loader2,
     PencilLine,
     Settings2,
     Store,
@@ -13,6 +14,23 @@ import { useEffect, useState } from "react";
 import { Header } from "../assets/Header";
 import { useAuth } from "@clerk/react";
 import axios from "axios";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
+
+const pageFade: Variants = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.06,
+            delayChildren: 0.04,
+        },
+    },
+}
+
+const cardRise: Variants = {
+    hidden: { opacity: 0, y: 14 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+}
 
 type SettingsTab = "set prices" | "thresholds" | "store management" | "cost sheet";
 
@@ -65,6 +83,7 @@ export function Settings() {
     const [successMessage, setSuccessMessage] = useState("")
     const [costSheetFileName, setCostSheetFileName] = useState("")
     const [renameValues, setRenameValues] = useState<Record<string, string>>({})
+    const [isEncodingPresetCost, setIsEncodingPresetCost] = useState(false)
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -96,14 +115,38 @@ export function Settings() {
         }
     }, [success])
     return (
-        <div className="relative min-h-screen overflow-hidden bg-[#050907] text-white">
+        <motion.div className="relative min-h-screen overflow-hidden bg-[#050907] text-white" initial="hidden" animate="show" variants={pageFade}>
+            <AnimatePresence>
+                {isEncodingPresetCost && (
+                    <motion.div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <motion.div
+                            className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-[#0b120f] px-8 py-10 text-center shadow-2xl"
+                            initial={{ opacity: 0, scale: 0.92, y: 12 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.92, y: 12 }}
+                            transition={{ duration: 0.28, ease: "easeOut" }}
+                        >
+                            <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
+                            <p className="text-sm font-medium text-white/90">
+                                Awaiting AI response.. This may take a bit depending on size
+                            </p>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_30%),radial-gradient(circle_at_top_right,rgba(22,101,52,0.18),transparent_26%),linear-gradient(to_bottom,rgba(255,255,255,0.03),transparent_28%)]" />
             <div className="pointer-events-none absolute left-1/2 top-28 h-105 w-190 -translate-x-1/2 rounded-full bg-emerald-500/10 blur-[120px]" />
 
             <Header />
 
-            <main className="relative z-10 mx-auto max-w-6xl px-6 py-8 sm:px-8 sm:py-10">
-                <section className="rounded-[2rem] border border-white/8 bg-white/3 p-5 shadow-[0_40px_120px_-60px_rgba(0,0,0,0.95)] backdrop-blur-md sm:p-7">
+            <motion.main className="relative z-10 mx-auto max-w-6xl px-6 py-8 sm:px-8 sm:py-10" variants={pageFade}>
+                <motion.section className="rounded-[2rem] border border-white/8 bg-white/3 p-5 shadow-[0_40px_120px_-60px_rgba(0,0,0,0.95)] backdrop-blur-md sm:p-7" variants={cardRise}>
                     <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                         <div className="max-w-2xl">
                             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-300">
@@ -140,38 +183,50 @@ export function Settings() {
                     </div>
 
                     <div className="mt-8 flex flex-wrap items-center gap-3 rounded-2xl border border-white/8 bg-[#0b110f] p-2">
-                        <button
+                        <motion.button
                             type="button"
                             onClick={() => setActiveTab("set prices")}
                             className={activeTab === "set prices" ? "rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#05110b] shadow-sm transition" : "rounded-full px-4 py-2 text-sm font-medium text-white/65 transition hover:bg-white/5 hover:text-white"}
+                            whileTap={{ scale: 0.97 }}
                         >
                             Set prices
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
                             type="button"
                             onClick={() => setActiveTab("thresholds")}
                             className={activeTab === "thresholds" ? "rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#05110b] shadow-sm transition" : "rounded-full px-4 py-2 text-sm font-medium text-white/65 transition hover:bg-white/5 hover:text-white"}
+                            whileTap={{ scale: 0.97 }}
                         >
                             Anomaly thresholds
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
                             type="button"
                             onClick={() => setActiveTab("store management")}
                             className={activeTab === "store management" ? "rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#05110b] shadow-sm transition" : "rounded-full px-4 py-2 text-sm font-medium text-white/65 transition hover:bg-white/5 hover:text-white"}
+                            whileTap={{ scale: 0.97 }}
                         >
                             Store management
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
                             type="button"
                             onClick={() => setActiveTab("cost sheet")}
                             className={activeTab === "cost sheet" ? "rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#05110b] shadow-sm transition" : "rounded-full px-4 py-2 text-sm font-medium text-white/65 transition hover:bg-white/5 hover:text-white"}
+                            whileTap={{ scale: 0.97 }}
                         >
                             Preset cost sheet
-                        </button>
+                        </motion.button>
                     </div>
 
+                    <AnimatePresence mode="wait">
                     {activeTab === "set prices" && (
-                        <section className="mt-8 rounded-[1.5rem] border border-white/8 bg-[#0b110f] p-5">
+                        <motion.section
+                            key="set-prices"
+                            className="mt-8 rounded-[1.5rem] border border-white/8 bg-[#0b110f] p-5"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.25, ease: "easeOut" }}
+                        >
                             <div className="flex items-center justify-between gap-4">
                                 <div>
                                     <p className="text-xs uppercase tracking-[0.24em] text-white/35">Preset pricing</p>
@@ -204,7 +259,7 @@ export function Settings() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredMaterials.map((material) => (<tr key={material.id} className="border-b border-white/8">
+                                    {filteredMaterials.map((material, index) => (<motion.tr key={material.id} className="border-b border-white/8" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2, delay: index * 0.02, ease: "easeOut" }}>
                                         <td className="px-4 py-4 align-top">
                                             <input onChange={(e) => {setItemSku(e.target.value) ;updateMaterial(material.id, presetPrice, e.target.value, itemDescription)}} readOnly={true} defaultValue={material.sku}className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
                                         </td>
@@ -217,20 +272,27 @@ export function Settings() {
                                         <td className="px-4 py-4 align-top">
                                             <input value={(material.preset_price * 1.30).toFixed(2)} readOnly className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
                                         </td>
-                                    </tr>))}
+                                    </motion.tr>))}
                                 </tbody>
                             </table>
 
                             <div className="mt-4 flex justify-end">
-                                <button type="button" className="rounded-2xl border border-emerald-400/20 bg-emerald-400 px-4 py-3 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-300">
+                                <motion.button type="button" className="rounded-2xl border border-emerald-400/20 bg-emerald-400 px-4 py-3 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-300" whileHover={{ y: -2, scale: 1.01 }} whileTap={{ scale: 0.98 }}>
                                     Save pricing rules
-                                </button>
+                                </motion.button>
                             </div>
-                        </section>
+                        </motion.section>
                     )}
 
                     {activeTab === "thresholds" && (
-                        <section className="mt-8 rounded-[1.5rem] border border-white/8 bg-[#0b110f] p-5">
+                        <motion.section
+                            key="thresholds"
+                            className="mt-8 rounded-[1.5rem] border border-white/8 bg-[#0b110f] p-5"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.25, ease: "easeOut" }}
+                        >
                             <div className="flex items-center justify-between gap-4">
                                 <div>
                                     <p className="text-xs uppercase tracking-[0.24em] text-white/35">Alert rules</p>
@@ -313,11 +375,18 @@ export function Settings() {
                                     </tr>
                                 </tbody>
                             </table>
-                        </section>
+                        </motion.section>
                     )}
 
                     {activeTab === "store management" && (
-                        <section className="mt-8 rounded-[1.5rem] border border-white/8 bg-[#0b110f] p-5">
+                        <motion.section
+                            key="store-management"
+                            className="mt-8 rounded-[1.5rem] border border-white/8 bg-[#0b110f] p-5"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.25, ease: "easeOut" }}
+                        >
                             <div className="flex items-center justify-between gap-4">
                                 <div>
                                     <p className="text-xs uppercase tracking-[0.24em] text-white/35">Stores</p>
@@ -346,7 +415,7 @@ export function Settings() {
                                         </tr>
                                     )}
                                     {stores.map((store, index) => (
-                                        <tr key={store.id} className={index === stores.length - 1 ? "" : "border-b border-white/8"}>
+                                        <motion.tr key={store.id} className={index === stores.length - 1 ? "" : "border-b border-white/8"} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2, delay: index * 0.03, ease: "easeOut" }}>
                                             <td className="px-4 py-4 align-top">
                                                 <input
                                                     type="radio"
@@ -365,15 +434,17 @@ export function Settings() {
                                             </td>
                                             <td className="px-4 py-4 align-top">
                                                 <div className="flex gap-2">
-                                                    <button
+                                                    <motion.button
                                                         type="button"
                                                         onClick={() => renameStore(store.id, renameValues[store.id] ?? store.name)}
                                                         className="inline-flex items-center gap-2 rounded-full border border-white/8 bg-[#0c1210] px-3 py-2 text-sm text-white/75 transition hover:cursor-pointer hover:text-white"
+                                                        whileHover={{ y: -2 }}
+                                                        whileTap={{ scale: 0.97 }}
                                                     >
                                                         <PencilLine className="h-4 w-4 text-emerald-300" />
                                                         Rename
-                                                    </button>
-                                                    <button
+                                                    </motion.button>
+                                                    <motion.button
                                                         type="button"
                                                         onClick={() => {
                                                             if(window.confirm(`Delete "${store.name}"? This removes all of its materials, sales, and files.`)){
@@ -381,21 +452,30 @@ export function Settings() {
                                                             }
                                                         }}
                                                         className="inline-flex items-center gap-2 rounded-full border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-200 transition hover:cursor-pointer hover:bg-rose-500/15"
+                                                        whileHover={{ y: -2 }}
+                                                        whileTap={{ scale: 0.97 }}
                                                     >
                                                         <Trash2 className="h-4 w-4" />
                                                         Delete
-                                                    </button>
+                                                    </motion.button>
                                                 </div>
                                             </td>
-                                        </tr>
+                                        </motion.tr>
                                     ))}
                                 </tbody>
                             </table>
-                        </section>
+                        </motion.section>
                     )}
 
                     {activeTab === "cost sheet" && (
-                        <section className="mt-8 rounded-[1.5rem] border border-white/8 bg-[#0b110f] p-5">
+                        <motion.section
+                            key="cost-sheet"
+                            className="mt-8 rounded-[1.5rem] border border-white/8 bg-[#0b110f] p-5"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.25, ease: "easeOut" }}
+                        >
                             <div className="flex items-center justify-between gap-4">
                                 <div>
                                     <p className="text-xs uppercase tracking-[0.24em] text-white/35">Cost sheet</p>
@@ -436,17 +516,26 @@ export function Settings() {
                                     </tr>
                                 </tbody>
                             </table>
-                        </section>
+                        </motion.section>
                     )}
-                </section>
-            </main>
-            {success && (
-                <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-lg bg-emerald-400 px-4 py-3 text-sm font-medium text-emerald-950 shadow-xl">
-                    <CheckCircle2 className="h-4 w-4" />
-                    {successMessage}
-                </div>
-            )}
-        </div>
+                    </AnimatePresence>
+                </motion.section>
+            </motion.main>
+            <AnimatePresence>
+                {success && (
+                    <motion.div
+                        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-lg bg-emerald-400 px-4 py-3 text-sm font-medium text-emerald-950 shadow-xl"
+                        initial={{ opacity: 0, y: 16, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 16, scale: 0.95 }}
+                        transition={{ duration: 0.25, ease: "easeOut" }}
+                    >
+                        <CheckCircle2 className="h-4 w-4" />
+                        {successMessage}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </motion.div>
     );
     async function fetchMaterialData(storeId: string){
         const token = await getToken()
@@ -481,6 +570,7 @@ export function Settings() {
     }
 
     async function encodePresetCost(preset: File, storeId: string){
+        setIsEncodingPresetCost(true)
         const token = await getToken()
         const formData = new FormData()
         formData.append("preset", preset)
@@ -490,6 +580,7 @@ export function Settings() {
         if(result.data.status){
             fetchMaterialData(storeId)
         }
+        setIsEncodingPresetCost(false)
     }
 
     async function renameStore(storeId: string, name: string){

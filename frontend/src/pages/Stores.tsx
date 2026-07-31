@@ -3,6 +3,23 @@ import { Header } from "../assets/Header";
 import { useAuth } from "@clerk/react";
 import axios from "axios";
 import { FileText, Trash2 } from "lucide-react";
+import { motion, type Variants } from "framer-motion";
+
+const pageFade: Variants = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.06,
+            delayChildren: 0.04,
+        },
+    },
+}
+
+const cardRise: Variants = {
+    hidden: { opacity: 0, y: 14 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+}
 
 export function Stores(){
     interface storeType{
@@ -36,6 +53,7 @@ export function Stores(){
     }
     interface salesType{
         id: string
+        file_id: number
         sale_date: string
         sku: string
         quantity: number
@@ -50,12 +68,13 @@ export function Stores(){
     const [files, setFiles] = useState<fileType[]>([])
     const [selectedFile, setSelectedFile] = useState<fileType | undefined>(undefined)
     const [selectedStore, setSelectedStore] = useState<storeType | undefined>(undefined)
-    const filteredMaterials = selectedFile ? materials.filter((m) => m.file_id === selectedFile.id) : null
     const [deletedMaterial, setDeletedMaterial] = useState(false)
     const [deletedFile, setDeletedFile] = useState(false)
     const [sales, setSales] = useState<salesType[]>([])
     const [salesFiles, setSalesFiles] = useState<fileType[]>([])
     const [fileTab, setFileTab] = useState<"material" | "sales">("material")
+    const filteredMaterials = (fileTab === "material" && selectedFile) ? materials.filter((m) => m.file_id === selectedFile.id) : null
+    const filteredSales = (fileTab === "sales" && selectedFile) ? sales.filter((s) => s.file_id === selectedFile.id) : null
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -99,39 +118,45 @@ export function Stores(){
         }
     }, [deletedMaterial, deletedFile])
     return(
-        <div className="relative min-h-screen overflow-hidden bg-[#060a09] text-white">
+        <motion.div className="relative min-h-screen overflow-hidden bg-[#060a09] text-white" initial="hidden" animate="show" variants={pageFade}>
             <Header/>
-            <main className="relative z-10 mx-auto max-w-6xl px-8 py-10">
-                <h1 className="text-xl font-semibold">Your Stores</h1>
+            <motion.main className="relative z-10 mx-auto max-w-6xl px-8 py-10" variants={pageFade}>
+                <motion.h1 className="text-xl font-semibold" variants={cardRise}>Your Stores</motion.h1>
 
-                <input
+                <motion.input
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search Stores"
                     className="mt-4 w-full max-w-xs rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-emerald-400/50 focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+                    variants={cardRise}
                 />
 
                 <div className="mt-4 flex flex-wrap gap-2">
-                    {filteredStores.map((store) => (
-                        <div
+                    {filteredStores.map((store, index) => (
+                        <motion.div
                             key={store.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.25, delay: index * 0.03, ease: "easeOut" }}
                             className={
                                 selectedStore?.id === store.id
                                     ? "cursor-pointer rounded-lg border border-emerald-400/50 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-300 transition"
                                     : "cursor-pointer rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 transition hover:border-emerald-400/30 hover:text-white"
                             }
                             onClick={() => setSelectedStore(store)}
+                            whileHover={{ y: -2, scale: 1.01 }}
+                            whileTap={{ scale: 0.99 }}
                         >
                             {store.name}
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
 
                 <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
-                    <div className="flex min-w-0 flex-col gap-6">
+                    <motion.div className="flex min-w-0 flex-col gap-6" variants={pageFade}>
                         <div>
-                            <h2 className="mb-2 text-sm font-semibold text-white/90">Materials Table</h2>
-                            <div className="overflow-hidden rounded-xl border border-white/10">
+                            <motion.h2 className="mb-2 text-sm font-semibold text-white/90" variants={cardRise}>Materials Table</motion.h2>
+                            <motion.div className="overflow-hidden rounded-xl border border-white/10" variants={cardRise} whileHover={{ y: -2 }}>
                                 <div className="max-h-96 overflow-y-auto overflow-x-auto">
                                     <table className="w-full text-left text-sm">
                                         <thead className="sticky top-0 z-10">
@@ -148,7 +173,7 @@ export function Stores(){
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {(filteredMaterials ?? materials).map((material) => (<tr key={material.id} className="border-t border-white/5">
+                                            {(filteredMaterials ?? materials).map((material, index) => (<motion.tr key={material.id} className="border-t border-white/5" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2, delay: index * 0.02, ease: "easeOut" }}>
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{new Date(material.purchased_at).toLocaleString()}</td>
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.sku}</td>
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{material.description}r</td>
@@ -162,16 +187,16 @@ export function Stores(){
                                                         <Trash2 className="h-3.5 w-3.5" />
                                                     </button>
                                                 </td>
-                                            </tr>))}
+                                            </motion.tr>))}
                                         </tbody>
                                     </table>
                                 </div>
-                            </div>
+                            </motion.div>
                         </div>
 
                         <div>
-                            <h2 className="mb-2 text-sm font-semibold text-white/90">Sales Table</h2>
-                            <div className="overflow-hidden rounded-xl border border-white/10">
+                            <motion.h2 className="mb-2 text-sm font-semibold text-white/90" variants={cardRise}>Sales Table</motion.h2>
+                            <motion.div className="overflow-hidden rounded-xl border border-white/10" variants={cardRise} whileHover={{ y: -2 }}>
                                 <div className="max-h-96 overflow-y-auto overflow-x-auto">
                                     <table className="w-full text-left text-sm">
                                         <thead className="sticky top-0 z-10">
@@ -184,43 +209,45 @@ export function Stores(){
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {sales.length > 0 ? sales.map((sale) => (<tr className="border-t border-white/5">
+                                            {(filteredSales ?? sales).length > 0 ? (filteredSales ?? sales).map((sale, index) => (<motion.tr key={sale.id} className="border-t border-white/5" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.2, delay: index * 0.02, ease: "easeOut" }}>
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{new Date(sale.sale_date).toLocaleDateString()}</td>
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.sku}</td>
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">{sale.quantity}</td>
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">${Number(sale.sale_price).toFixed(2)}</td>
                                                 <td className="whitespace-nowrap px-4 py-2 text-white/70">${Number(sale.total).toFixed(2)}</td>
-                                            </tr>)) : <tr><td colSpan={5} className="px-4 py-6 text-center text-white/40">No sales yet</td></tr>} 
+                                            </motion.tr>)) : <tr><td colSpan={5} className="px-4 py-6 text-center text-white/40">No sales yet</td></tr>}
                                         </tbody>
                                     </table>
                                 </div>
-                            </div>
+                            </motion.div>
                         </div>
-                    </div>
+                    </motion.div>
 
-                    <div className="min-w-0 rounded-xl border border-white/10 bg-white/3 p-4">
+                    <motion.div className="min-w-0 rounded-xl border border-white/10 bg-white/3 p-4" variants={cardRise} whileHover={{ y: -3 }}>
                         <p className="truncate text-sm font-semibold text-white/90">Selected File: {selectedFile?.filename}</p>
 
                         <div className="mt-3 flex items-center gap-2 rounded-lg border border-white/10 bg-black/20 p-1">
-                            <button
+                            <motion.button
                                 type="button"
                                 onClick={() => setFileTab("material")}
                                 className={fileTab === "material" ? "flex-1 rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-[#05110b] transition" : "flex-1 rounded-md px-3 py-1.5 text-xs font-medium text-white/60 transition hover:text-white"}
+                                whileTap={{ scale: 0.98 }}
                             >
                                 Material
-                            </button>
-                            <button
+                            </motion.button>
+                            <motion.button
                                 type="button"
                                 onClick={() => setFileTab("sales")}
                                 className={fileTab === "sales" ? "flex-1 rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-[#05110b] transition" : "flex-1 rounded-md px-3 py-1.5 text-xs font-medium text-white/60 transition hover:text-white"}
+                                whileTap={{ scale: 0.98 }}
                             >
                                 Sales
-                            </button>
+                            </motion.button>
                         </div>
 
                         <div className="mt-3 space-y-2">
-                            {(fileTab === "material" ? files : salesFiles)?.map((file) => (
-                                <div
+                            {(fileTab === "material" ? files : salesFiles)?.map((file, index) => (
+                                <motion.div
                                     key={file.id}
                                     onClick={() => setSelectedFile(selectedFile?.id === file.id ? undefined : file)}
                                     className={
@@ -228,6 +255,10 @@ export function Stores(){
                                             ? "flex w-full cursor-pointer items-center gap-2 rounded-lg border border-emerald-400/50 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-300 transition"
                                             : "flex w-full cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 transition hover:border-emerald-400/30 hover:text-white"
                                     }
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.22, delay: index * 0.03, ease: "easeOut" }}
+                                    whileHover={{ y: -2, scale: 1.01 }}
                                 >
                                     <FileText className="h-4 w-4 shrink-0" />
                                     <span className="min-w-0 flex-1 truncate">{file.filename}</span>
@@ -237,12 +268,12 @@ export function Stores(){
                                     >
                                         <Trash2 className="h-3.5 w-3.5" />
                                     </button>
-                                </div>
+                                </motion.div>
                             ))}
                         </div>
-                    </div>
+                    </motion.div>
                 </div>
-            </main>
+            </motion.main>
 
             {deletedMaterial && (
                 <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-lg bg-red-500 px-4 py-3 text-sm font-medium text-red-950 shadow-xl">
@@ -257,7 +288,7 @@ export function Stores(){
                     File successfully deleted
                 </div>
             )}
-        </div>
+        </motion.div>
     )
 
 
