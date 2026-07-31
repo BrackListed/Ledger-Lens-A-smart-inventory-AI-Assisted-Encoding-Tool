@@ -1,9 +1,23 @@
 import { SignInButton, SignUpButton } from "@clerk/react";
 import { useAuth } from "@clerk/react";
-import { Navigate } from "react-router-dom";
+import { useSignIn } from "@clerk/react/legacy";
+import { Navigate, useNavigate } from "react-router-dom";
 
 export function Intermission(){
     const {isLoaded, userId} = useAuth()
+    const { signIn, setActive } = useSignIn()
+    const navigate = useNavigate()
+
+    const continueAsGuest = async () => {
+        if(!signIn) return
+        const result = await signIn.create({
+            identifier: import.meta.env.VITE_GUEST_EMAIL,
+            password: import.meta.env.VITE_GUEST_PASSWORD,
+        })
+        await setActive({ session: result.createdSessionId })
+        navigate("/")
+    }
+
     if(!isLoaded) return null
     if(userId) return <Navigate to = "/" replace/>
     return(
@@ -32,6 +46,14 @@ export function Intermission(){
                         </button>
                     </SignUpButton>
                 </div>
+
+                <button
+                    type="button"
+                    onClick={continueAsGuest}
+                    className="mt-5 text-xs text-white/40 underline-offset-4 transition hover:cursor-pointer hover:text-white/70 hover:underline"
+                >
+                    Continue as Guest
+                </button>
             </div>
         </div>
     )
