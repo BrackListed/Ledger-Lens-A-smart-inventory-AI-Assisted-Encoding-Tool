@@ -1,4 +1,4 @@
-import { CheckCircle2, AlertTriangle, FileText, Trash2, XIcon } from "lucide-react";
+import { CheckCircle2, AlertTriangle, FileText, Trash2, XIcon, Loader2 } from "lucide-react";
 import { Header } from "../assets/Header";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -68,6 +68,7 @@ export function Encoder(){
     const [salesFileName, setSalesFileName] = useState("")
     const [success, setSuccess] = useState<boolean | undefined>(undefined)
     const [successMessage, setSuccessMessage] = useState("")
+    const [isEncodingSales, setIsEncodingSales] = useState(false)
     useEffect(() => {
         const fetchStoresData = async() => {
             const token = await getToken()
@@ -123,6 +124,17 @@ export function Encoder(){
     }, [success])
     return(
         <div className="relative min-h-screen overflow-hidden bg-[#060a09] text-white">
+            {isEncodingSales && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+                    <div className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-[#0b120f] px-8 py-10 text-center shadow-2xl">
+                        <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
+                        <p className="text-sm font-medium text-white/90">
+                            Awaiting AI response.. This may take a bit depending on size
+                        </p>
+                    </div>
+                </div>
+            )}
+
             <Header/>
 
             <main className="relative z-10 mx-auto max-w-6xl px-8 py-10">
@@ -382,6 +394,7 @@ export function Encoder(){
     }
 
     async function encodeSales(file: File, storeId: string, name: string){
+        setIsEncodingSales(true)
         const token = await getToken()
         const formData = new FormData()
         formData.append("sales", file)
@@ -391,6 +404,7 @@ export function Encoder(){
         setSalesFileId(result.data.id)
         setSuccess(result.data.status)
         setSuccessMessage(result.data.message)
+        setIsEncodingSales(false)
     }
 
     async function sendSales(sales: salesType[], fileId: number){

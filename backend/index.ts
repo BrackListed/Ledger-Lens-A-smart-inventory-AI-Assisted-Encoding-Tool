@@ -47,7 +47,7 @@ app.post("/webhooks/clerk", express.raw({type: "application/json"}), async (req,
 })
 
 app.use(clerkMiddleware())
-app.use(express.json())
+app.use(express.json({limit: "10mb"}))
 
 
 const storage = multer.diskStorage({
@@ -201,7 +201,7 @@ app.post("/encode/sales/:storeId", upload.single("sales"), async(req, res) => {
   const clean = raw.replace(/```json|```/g, '').trim()
   const columns = JSON.parse(clean)
   const cutoff = object.findIndex(sample => !sample[columns.sale_price] && !sample[columns.sale_date])
-  const rawSales = object.slice(1, cutoff)
+  const rawSales = cutoff === -1 ? object.slice(1) : object.slice(1, cutoff)
   const sales = rawSales.map((sales) => {
     const price = sales[columns.sale_price]
     const quantity = sales[columns.quantity]
