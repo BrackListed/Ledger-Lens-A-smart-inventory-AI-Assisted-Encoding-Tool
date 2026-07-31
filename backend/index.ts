@@ -81,14 +81,16 @@ async function getOrCreateUserId(userId: string){
 
 app.post("/create/store", async(req, res) => {
   const {userId} = getAuth(req)
-  const id = await getOrCreateUserId(userId!)
+  if(!userId) return res.status(401).json({message: "Not authenticated"})
+  const id = await getOrCreateUserId(userId)
   await pool.query("INSERT INTO stores(name, user_id) VALUES($1, $2)", [req.body.name, id])
   res.json(true)
 })
 
 app.get("/store", async(req, res) => {
   const {userId} = getAuth(req)
-  const id = await getOrCreateUserId(userId!)
+  if(!userId) return res.status(401).json({message: "Not authenticated"})
+  const id = await getOrCreateUserId(userId)
   const result = await pool.query("SELECT * FROM stores WHERE user_id = $1", [id])
   res.json(result.rows)
 })
@@ -105,8 +107,9 @@ app.delete("/store/:storeId", async(req, res) => {
 
 app.post("/encode/:storeId", upload.single("file"), async(req, res) => {
   const {userId} = getAuth(req)
+  if(!userId) return res.status(401).json({message: "Not authenticated"})
   const pending = await pool.query("SELECT id FROM file WHERE store_id = $1 AND status = 'Pending' AND type = 'Materials'", [req.params.storeId])
-  const id = await getOrCreateUserId(userId!)
+  const id = await getOrCreateUserId(userId)
   if(pending.rows.length > 0) {
     return res.json({message: "You have items on pending. Verify them before adding a new one!", status: false})
   }
@@ -166,8 +169,9 @@ app.post("/encode/:storeId", upload.single("file"), async(req, res) => {
 
 app.post("/encode/sales/:storeId", upload.single("sales"), async(req, res) => {
   const {userId} = getAuth(req)
+  if(!userId) return res.status(401).json({message: "Not authenticated"})
   const pending = await pool.query("SELECT id FROM file WHERE store_id = $1 AND status = 'Pending' AND type = 'Sales'", [req.params.storeId])
-  const id = await getOrCreateUserId(userId!)
+  const id = await getOrCreateUserId(userId)
   if(pending.rows.length > 0) {
     return res.json({message: "You have sales on pending. Verify them before adding a new one!", status: false})
   }
@@ -445,6 +449,12 @@ app.delete("/delete/file/:fileId/:storeId", async(req, res) => {
 
 
 
+
+app.use((err: unknown, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(err)
+  if(res.headersSent) return next(err)
+  res.status(500).json({message: "Internal server error", status: false})
+})
 
 const PORT = process.env.PORT || 5000
 app.listen(PORT, () => console.log(`Server listening on port ${PORT}`))
