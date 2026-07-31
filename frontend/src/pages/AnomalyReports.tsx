@@ -99,7 +99,7 @@ export function AnomalyReports() {
             setStockMismatch(result.data)
         }
         fetchStockMismatch()
-    }, [])
+    }, [selectedStore])
     useEffect(() => {
         if(!selectedStore) return 
         const fetchSalesData = async() => {
@@ -108,7 +108,7 @@ export function AnomalyReports() {
             setSales(result.data.sales)
         }
         fetchSalesData()
-    }, [selectedStore, activeTab])
+    }, [selectedStore])
     return (
         <div className="relative min-h-screen overflow-hidden bg-[#050907] text-white">
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_30%),radial-gradient(circle_at_top_right,rgba(22,101,52,0.18),transparent_26%),linear-gradient(to_bottom,rgba(255,255,255,0.03),transparent_28%)]" />
@@ -236,29 +236,115 @@ export function AnomalyReports() {
                         <section className="space-y-4">
                             {activeTab === "all" && (
                                 <article className="group rounded-[1.5rem] border border-white/8 bg-[#0b110f] p-5 transition hover:-translate-y-0.5 hover:border-emerald-400/20 hover:bg-[#0d1512]">
-                                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                                        <div className="flex items-start gap-4">
-                                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-white/3 text-emerald-300">
-                                                <ArrowUpRight className="h-5 w-5" />
-                                            </div>
-                                            <div>
-                                                <div className="flex flex-wrap items-center gap-2">
-                                                    <h3 className="text-base font-semibold text-white sm:text-lg">Price spike — Cupcake Flour 25kg</h3>
-                                                    <span className="rounded-full border border-white/8 bg-white/3 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-white/45">
-                                                        price spike
-                                                    </span>
+                                    <div className="space-y-4">
+                                        {spikedMaterials.map((material) => (
+                                            <div key={`spike-${material.id}`} className="rounded-[1.25rem] border border-white/8 bg-black/10 p-4">
+                                                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                                    <div className="flex items-start gap-4">
+                                                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-white/3 text-emerald-300">
+                                                            <ArrowUpRight className="h-5 w-5" />
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <h3 className="text-base font-semibold text-white sm:text-lg">
+                                                                    Price spike — {material.description}
+                                                                </h3>
+                                                                <span className="rounded-full border border-white/8 bg-white/3 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-white/45">
+                                                                    price spike
+                                                                </span>
+                                                            </div>
+                                                            <p className="mt-1 text-sm text-white/55">
+                                                                Invoice #{material.file_id} · {material.sku}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="inline-flex w-fit items-center rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-sm font-semibold text-rose-300">
+                                                        +{Math.round(((Number(material.unit_price) - Number(material.preset_price)) / Number(material.preset_price)) * 100)}%
+                                                    </div>
                                                 </div>
-                                                <p className="mt-1 text-sm text-white/55">Invoice #9931 · Samios</p>
+
+                                                <div className="mt-4 border-t border-white/8 pt-4 text-sm leading-relaxed text-white/70">
+                                                    Usually ${Number(material.preset_price).toFixed(2)} · this invoice ${Number(material.unit_price).toFixed(2)} · {material.quantity} units · ${(Number(material.total_price) - Number(material.preset_price) * Number(material.quantity)).toFixed(2)} above expected
+                                                </div>
                                             </div>
-                                        </div>
+                                        ))}
 
-                                        <div className="inline-flex w-fit items-center rounded-full border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-sm font-semibold text-rose-300">
-                                            +36%
-                                        </div>
-                                    </div>
+                                        {flooredMaterials.map((material) => {
+                                            const sale = sales.find(s => s.sku === material.sku)
+                                            if(!sale) return null
+                                            const lossPercent = Math.round((1 - Number(sale.sale_price) / Number(material.unit_price)) * 100)
+                                            const priceDiff = material.unit_price - sale.sale_price
+                                            return(
+                                            <div key={`margin-${material.id}`} className="rounded-[1.25rem] border border-white/8 bg-black/10 p-4">
+                                                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                                    <div className="flex items-start gap-4">
+                                                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-white/3 text-emerald-300">
+                                                            <ArrowDownRight className="h-5 w-5" />
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <h3 className="text-base font-semibold text-white sm:text-lg">
+                                                                    Margin loss — {material.description}
+                                                                </h3>
+                                                                <span className="rounded-full border border-white/8 bg-white/3 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-white/45">
+                                                                    margin loss
+                                                                </span>
+                                                            </div>
+                                                            <p className="mt-1 text-sm text-white/55">
+                                                                Invoice #{material.file_id} · {material.sku}
+                                                            </p>
+                                                        </div>
+                                                    </div>
 
-                                    <div className="mt-4 border-t border-white/8 pt-4 text-sm leading-relaxed text-white/70">
-                                        Usually $22.00 · this invoice $30.00 · 50 units · $400 above expected
+                                                    <div className="inline-flex w-fit items-center rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-sm font-semibold text-red-300">
+                                                        -{Number(lossPercent).toFixed(1)}% margin
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-4 border-t border-white/8 pt-4 text-sm leading-relaxed text-white/70">
+                                                    Cost {Number(material.unit_price).toFixed(2)} · Sale {sale.sale_price} · {material.quantity} units · {(Number(material.unit_price) * material.quantity - Number(sale.sale_price * material.quantity)).toFixed(2)} below expected · Price Difference {priceDiff.toFixed(2)}
+                                                </div>
+                                            </div>
+                                            )
+                                        })}
+
+                                        {stockMismatch.map((material) => {
+                                            const sale = sales.find(s => s.sku === material.sku)
+                                            if(!sale) return null
+                                            return(
+                                            <div key={`mismatch-${material.id}`} className="rounded-[1.25rem] border border-white/8 bg-black/10 p-4">
+                                                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                                    <div className="flex items-start gap-4">
+                                                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-white/3 text-emerald-300">
+                                                            <ShieldAlert className="h-5 w-5" />
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <h3 className="text-base font-semibold text-white sm:text-lg">Stock mismatch — {material.sku}</h3>
+                                                                <span className="rounded-full border border-white/8 bg-white/3 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-white/45">
+                                                                    stock mismatch
+                                                                </span>
+                                                            </div>
+                                                            <p className="mt-1 text-sm text-white/55">Sold more than was stocked</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="inline-flex w-fit items-center rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-sm font-semibold text-orange-300">
+                                                        {material.quantity} units
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-4 border-t border-white/8 pt-4 text-sm leading-relaxed text-white/70">
+                                                    Stocked {material.quantity + sale.quantity} · sold {sale.quantity} · quantity went negative
+                                                </div>
+                                            </div>
+                                            )
+                                        })}
+
+                                        {spikedMaterials.length === 0 && flooredMaterials.length === 0 && stockMismatch.length === 0 && (
+                                            <p className="text-sm text-white/40">No anomalies flagged for this store.</p>
+                                        )}
                                     </div>
                                 </article>
                             )}
@@ -385,9 +471,6 @@ export function AnomalyReports() {
                                 </article>
                             )}
 
-                            <div className="rounded-[1.5rem] border border-dashed border-emerald-400/20 bg-emerald-400/5 p-5 text-sm text-white/55">
-                                Tabs switch between the review groups above, keeping the page focused and easy to scan.
-                            </div>
                         </section>
                     </div>
                 </section>

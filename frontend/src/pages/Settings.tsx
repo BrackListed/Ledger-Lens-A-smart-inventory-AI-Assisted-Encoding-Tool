@@ -218,7 +218,7 @@ export function Settings() {
                                             <input onChange={(e) => {setItemDescription(e.target.value); updateMaterial(material.id, presetPrice, itemSku, e.target.value)}} readOnly={true} defaultValue={material.description} className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
                                         </td>
                                         <td className="px-4 py-4 align-top">
-                                            <input onChange={(e) => {setPresetPrice(Number(e.target.value)); updateMaterial(material.id, Number(e.target.value), itemSku, itemDescription)}} defaultValue={material.preset_price ?? "No preset price"} className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
+                                            <input onChange={(e) => {setPresetPrice(Number(e.target.value)); updateMaterial(material.id, Number(e.target.value), itemSku, itemDescription)}} defaultValue={Number(material.preset_price).toFixed(2) ?? "No preset price"} className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
                                         </td>
                                         <td className="px-4 py-4 align-top">
                                             <input value={(material.preset_price * 1.30).toFixed(2)} readOnly className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none" />
